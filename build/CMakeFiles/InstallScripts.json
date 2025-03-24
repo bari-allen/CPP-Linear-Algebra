@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/karl/C++ Projects/PCA/build/cmake_install.cmake",
+		"C:/Users/karl/C++ Projects/PCA/build/external/googletest/cmake_install.cmake",
+		"C:/Users/karl/C++ Projects/PCA/build/external/googletest/googlemock/cmake_install.cmake",
+		"C:/Users/karl/C++ Projects/PCA/build/external/googletest/googletest/cmake_install.cmake",
+		"C:/Users/karl/C++ Projects/PCA/build/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

@@ -1,0 +1,5 @@
+add_test([=[TestTopic.Equality]=]  [==[C:/Users/karl/C++ Projects/PCA/build/tests/Debug/matrix_test.exe]==] [==[--gtest_filter=TestTopic.Equality]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TestTopic.Equality]=]  PROPERTIES WORKING_DIRECTORY [==[C:/Users/karl/C++ Projects/PCA/build/tests]==] SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[TestTopic.MoreEquality]=]  [==[C:/Users/karl/C++ Projects/PCA/build/tests/Debug/matrix_test.exe]==] [==[--gtest_filter=TestTopic.MoreEquality]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TestTopic.MoreEquality]=]  PROPERTIES WORKING_DIRECTORY [==[C:/Users/karl/C++ Projects/PCA/build/tests]==] SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  matrix_test_TESTS TestTopic.Equality TestTopic.MoreEquality)

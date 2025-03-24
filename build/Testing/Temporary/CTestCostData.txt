@@ -1,0 +1,4 @@
+TestTopic.Equality 1 0.033531
+TestTopic.MoreEquality 0 0
+---
+TestTopic.MoreEquality

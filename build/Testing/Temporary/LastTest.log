@@ -1,0 +1,67 @@
+Start testing: Mar 24 04:12 Pacific Daylight Time
+----------------------------------------------------------
+1/2 Testing: TestTopic.Equality
+1/2 Test: TestTopic.Equality
+Command: "C:/Users/karl/C++ Projects/PCA/build/tests/Debug/matrix_test.exe" "--gtest_filter=TestTopic.Equality" "--gtest_also_run_disabled_tests"
+Directory: C:/Users/karl/C++ Projects/PCA/build/tests
+"TestTopic.Equality" start time: Mar 24 04:12 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from C:\Users\karl\C++ Projects\PCA\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = TestTopic.Equality
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TestTopic
+[ RUN      ] TestTopic.Equality
+[       OK ] TestTopic.Equality (0 ms)
+[----------] 1 test from TestTopic (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (1 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"TestTopic.Equality" end time: Mar 24 04:12 Pacific Daylight Time
+"TestTopic.Equality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: TestTopic.MoreEquality
+2/2 Test: TestTopic.MoreEquality
+Command: "C:/Users/karl/C++ Projects/PCA/build/tests/Debug/matrix_test.exe" "--gtest_filter=TestTopic.MoreEquality" "--gtest_also_run_disabled_tests"
+Directory: C:/Users/karl/C++ Projects/PCA/build/tests
+"TestTopic.MoreEquality" start time: Mar 24 04:12 Pacific Daylight Time
+Output:
+----------------------------------------------------------
+Running main() from C:\Users\karl\C++ Projects\PCA\external\googletest\googletest\src\gtest_main.cc
+Note: Google Test filter = TestTopic.MoreEquality
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TestTopic
+[ RUN      ] TestTopic.MoreEquality
+C:\Users\karl\C++ Projects\PCA\tests\matrix_test.cpp(12): error: Expected equality of these values:
+  GetMeaningOfLife()
+    Which is: 42
+  0
+Oh no, a mistake
+
+[  FAILED  ] TestTopic.MoreEquality (0 ms)
+[----------] 1 test from TestTopic (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] TestTopic.MoreEquality
+
+ 1 FAILED TEST
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Failed.
+"TestTopic.MoreEquality" end time: Mar 24 04:12 Pacific Daylight Time
+"TestTopic.MoreEquality" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Mar 24 04:12 Pacific Daylight Time
