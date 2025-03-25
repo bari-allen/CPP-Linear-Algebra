@@ -29,7 +29,7 @@ class imageMat {
         int get_cols();
 
         //Overload the equals operator
-        bool operator== (const imageMat& rhs);
+        bool operator== (const imageMat& rhs) const;
 
         //Overload the +, -, and * operators
         //First takes two matrices as inputs
@@ -170,6 +170,20 @@ int imageMat::get_cols() {
     return n_cols;
 }
 
+bool imageMat::operator== (const imageMat& rhs) const {
+    if (this->n_rows != rhs.n_rows || this->n_cols != rhs.n_cols) {
+        return false;
+    }
+
+    for (int i = 0; i < this->n_elements * 3; ++i) {
+        if (this->m_data[i] != rhs.m_data[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 imageMat operator+(const imageMat& lhs, const imageMat& rhs) {
     if (lhs.n_cols != rhs.n_cols || lhs.n_rows != rhs.n_rows) {
         throw std::invalid_argument("Both sides must have the same size!");
@@ -219,6 +233,7 @@ imageMat operator+(const imageMat& lhs, const unsigned char& rhs) {
     return result;
 }
 
+//Takes the dot product of two imageMat objects
 imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
     int r_rows = rhs.n_rows;
     int r_cols = rhs.n_cols;
@@ -232,21 +247,28 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
     unsigned char* temp_result = new unsigned char[lhs.n_rows * rhs.n_cols * 3];
 
     #pragma omp parallel for
-    for (int lhs_row = 0; lhs_row < l_rows; lhs_row += 3) {
-        for (int rhs_col = 0; rhs_col < r_cols; rhs_col += 3) {
+    for (int lhs_row = 0; lhs_row < l_rows; ++lhs_row) {
+        for (int rhs_col = 0; rhs_col < r_cols; ++rhs_col) {
 
             unsigned char blue_result = 0x00;
             unsigned char green_result = 0x00;
             unsigned char red_result = 0x00;
 
-            for (int lhs_col = 0; lhs_col < l_cols; lhs_col += 3) {
+            for (int lhs_col = 0; lhs_col < l_cols; ++lhs_col) {
+
+                //Same liear_indexing algorithm used below
                 int lhs_linear_index = 3 * ((lhs_row * l_cols) + lhs_col);
+
+                //Different linear indexing algorithm is used since the rhs has
+                //the same number of rows as the lhs has columns
                 int rhs_linear_index = 3 * ((lhs_col * r_cols) + rhs_col);
 
                 unsigned char blue_val = (lhs.m_data[lhs_linear_index] * rhs.m_data[rhs_linear_index]);
                 unsigned char green_val = (lhs.m_data[lhs_linear_index + 1] * rhs.m_data[rhs_linear_index + 1]);
                 unsigned char red_val = (lhs.m_data[lhs_linear_index + 2] * rhs.m_data[rhs_linear_index + 2]);
 
+                //Clamps the output of the color results to prevent overflow since 
+                //unsigned chars can only represent 0 - 255
                 blue_result = std::min(255, int(blue_result) + int(blue_val));
                 green_result = std::min(255, int(green_result) + int(green_val));
                 red_result = std::min(255, int(red_result) + int(red_val));

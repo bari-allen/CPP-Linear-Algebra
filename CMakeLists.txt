@@ -14,3 +14,5 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(tests)
+
+set(CMAKE_BUILD_TYPE Debug)
