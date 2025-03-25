@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <array>
 #include <omp.h>
-#include <gtest/gtest.h>
 
 class imageMat {
     public:
