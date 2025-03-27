@@ -4,6 +4,8 @@
 #include <cstring>
 #include <stdexcept>
 #include <omp.h>
+#include <math.h>
+#include <vector>
 
 class imageMat {
     public:
@@ -14,12 +16,14 @@ class imageMat {
         //and 3 BGR hex values
         imageMat(int nRows, int nCols, const unsigned int* input_data);
         imageMat(const imageMat& inputMat);
+        imageMat(int nRows, int nCols, const std::vector<unsigned int> *input_data);
 
         //The destructor
         ~imageMat();
 
         //Configuration functions
         bool resize(int nRows, int nCols);
+        void set_identity();
 
         //Element access functions
         unsigned int get(int row, int col);
@@ -27,8 +31,12 @@ class imageMat {
         int get_rows();
         int get_cols();
 
+        //Invert the current matrix if it is invertible
+        bool inverse();
+
         //Overload the equals operator
         bool operator== (const imageMat& rhs) const;
+        bool compare_to(const imageMat& comparator, int tolerance);
 
         //Overload the +, -, and * operators
         //First takes two matrices as inputs
@@ -46,11 +54,19 @@ class imageMat {
         friend imageMat operator* (const unsigned char& lhs, const imageMat& rhs);
         friend imageMat operator* (const imageMat& lhs, const unsigned char& rhs);
 
-    private:
+        void separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col);
+
+    public: //Should be made private after testing
         //Get the range of index values for a given row and column in the
         //flattened array
-        int get_range_start(int row, int col);
-        
+        int get_linear_index(int row, int col);
+        bool is_square() const;
+        void swap_row(int row1, int row2);
+        void mult_add(int addend, int multiplicant, int multiplication_factor);
+        void mult_row(int row, int multiplication_factor);
+        bool join(const imageMat& matrix2);
+        int row_with_max(int col_num, int starting_row);
+
     private:
         unsigned int* m_data;
         int n_rows, n_cols, n_elements;
@@ -107,6 +123,21 @@ imageMat::imageMat(const imageMat& inputMat) {
 
 }
 
+//A constructor that accepts a vector as input
+imageMat::imageMat(int input_rows, int input_cols, const std::vector<unsigned int> *input_data) {
+    n_rows = input_rows;
+    n_cols = input_cols;
+    n_elements = n_cols * n_rows;
+
+    if (n_elements != input_data->size()) {
+        throw std::invalid_argument("The number of elements in the input data, and determined by the shape mismatch!");
+    }
+    
+    m_data = new unsigned int[n_elements];
+
+    std::memcpy(m_data, input_data->data(), n_elements * sizeof(unsigned int));
+}
+
 //Destructor
 imageMat::~imageMat() {
     if (m_data != nullptr) {
@@ -138,8 +169,26 @@ bool imageMat::resize(int r_rows, int r_cols) {
     }
 }
 
+//Turns the matrix into the identity matrix if the matrix is square
+void imageMat::set_identity() {
+    if (!is_square()) {
+        throw std::invalid_argument("Cannot set a non-square matrix to an identity matrix!");
+    }
+
+    for (int row = 0; row < n_rows; ++row) {
+        for (int col = 0; col < n_cols; ++col) {
+            int linear_index = get_linear_index(row, col);
+            if (row == col) {
+                m_data[linear_index] = 1;
+            } else {
+                m_data[linear_index] = 0;
+            }
+        }
+    }
+}
+
 unsigned int imageMat::get(int row, int col) {
-    int linear_index = get_range_start(row, col);
+    int linear_index = get_linear_index(row, col);
 
     unsigned int pixel = 0x000000;
 
@@ -151,7 +200,7 @@ unsigned int imageMat::get(int row, int col) {
 }
 
 bool imageMat::set(int row, int col, unsigned int rgb_data) {
-    int linear_index = get_range_start(row, col);
+    int linear_index = get_linear_index(row, col);
 
     if (linear_index >= 0) {
         m_data[linear_index] = rgb_data;
@@ -181,6 +230,27 @@ bool imageMat::operator== (const imageMat& rhs) const {
     }
 
     return true;
+}
+
+bool imageMat::compare_to(const imageMat& comparitor, int tolerance) {
+    int c_rows = comparitor.n_rows;
+    int c_cols = comparitor.n_cols;
+
+    if(c_rows != n_rows || c_cols != n_cols) {
+        return false;
+    }
+
+    double cum_sum = 0.0;
+    for (int i = 0; i < n_elements; ++i) {
+        unsigned int element_1 = m_data[i];
+        unsigned int element_2 = comparitor.m_data[i];
+
+        cum_sum += std::pow(element_1 - element_2, 2);
+    }
+
+    double distance = sqrt(cum_sum / ((n_rows * n_cols) - 1));
+
+    return distance < tolerance ? true : false;
 }
 
 imageMat operator+(const imageMat& lhs, const imageMat& rhs) {
@@ -277,10 +347,31 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
     return result;
 }
 
+void imageMat::separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col) {
+    if (split_col > n_cols) {
+        throw std::invalid_argument("Split column cannot be greater than the number of columns in the matrix!");
+    }
 
+    int num_rows = n_rows;
+    int num_cols = split_col;
+    int num_cols_2 = num_cols - split_col;
+
+    matrix_1->resize(num_rows, num_cols);
+    matrix_2->resize(num_rows, num_cols_2);
+
+    for (int row = 0; row < num_rows; ++row) {
+        for (int col = 0; col < n_cols; ++col) {
+            if (col < split_col) {
+                matrix_1->set(row, col, this->get(row, col));
+            } else {
+                matrix_2->set(row, col, this->get(row, col));
+            }
+        }
+    }
+}
 
 //Returns the flattened index of the 3D matrix
-int imageMat::get_range_start(int row, int col) {
+int imageMat::get_linear_index(int row, int col) {
     if ((row < n_rows) && (row >= 0) && (col < n_cols) && (col >= 0)) {
         return ((row * n_cols) + col);
     } else {
