@@ -79,6 +79,12 @@ TEST(Separate_Matrix, Error) {
 
     out_of_bounds_col = a_cols;
     EXPECT_THROW(a_mat.separate(test_1, test_2, out_of_bounds_col), std::invalid_argument);
+
+    out_of_bounds_col = 0;
+    EXPECT_THROW(a_mat.separate(test_1, test_2, out_of_bounds_col), std::invalid_argument);
+
+    out_of_bounds_col = -10;
+    EXPECT_THROW(a_mat.separate(test_1, test_2, out_of_bounds_col), std::invalid_argument);
 }
 
 TEST(Separate_Matrix, Simple) {

@@ -352,6 +352,8 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
 void imageMat::separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col) {
     if (split_col >= n_cols) {
         throw std::invalid_argument("Split column cannot be greater than the number of columns in the matrix!");
+    } else if (split_col <= 0) {
+        throw std::invalid_argument("Split column cannot be less than or equal to 0 columns!");
     }
 
     int num_rows = n_rows;
