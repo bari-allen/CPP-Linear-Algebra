@@ -64,3 +64,58 @@ TEST(Matrix_Multiplication, Advanced) {
 
     EXPECT_TRUE(e_mat == actual_mat);
 }
+
+TEST(Separate_Matrix, Error) {
+    int a_rows = 2;
+    int a_cols = 3;
+    unsigned int a[6] = {0, 0, 0, 0, 0, 0};
+    imageMat a_mat(a_rows, a_cols, a);
+
+    int out_of_bounds_col = 4;
+    imageMat* test_1 = new imageMat();
+    imageMat* test_2 = new imageMat();
+
+    EXPECT_THROW(a_mat.separate(test_1, test_2, out_of_bounds_col), std::invalid_argument);
+
+    out_of_bounds_col = a_cols;
+    EXPECT_THROW(a_mat.separate(test_1, test_2, out_of_bounds_col), std::invalid_argument);
+}
+
+TEST(Separate_Matrix, Simple) {
+    unsigned int a[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    imageMat a_mat(3, 4, a);
+
+    imageMat* b_mat = new imageMat();
+    imageMat* c_mat = new imageMat();
+
+    unsigned int e_1[6] = {0, 1, 4, 5, 8, 9};
+    imageMat e_1_mat(3, 2, e_1);
+
+    unsigned int e_2[6] = {2, 3, 6, 7, 10, 11};
+    imageMat e_2_mat(3, 2, e_2);
+
+    a_mat.separate(b_mat, c_mat, 2);
+
+    EXPECT_TRUE(*b_mat == e_1_mat);
+    EXPECT_TRUE(*c_mat == e_2_mat);
+}
+
+TEST(Separate_Matrix, Advanced) {
+    unsigned int a[25] = {1, 1, 1, 1, 1, 0, 2, 4, 10, 3, 20, 10, 15, 10,
+        12, 0, 1, 1, 0, 1, 100, 10, 2, 3, 7};
+    imageMat a_mat(5, 5, a);
+
+    imageMat* b_mat = new imageMat();
+    imageMat* c_mat = new imageMat();
+
+    unsigned int e_1[15] = {1, 1, 1, 0, 2, 4, 20, 10, 15, 0, 1, 1, 100, 10, 2};
+    imageMat e_1_mat(5, 3, e_1);
+
+    unsigned int e_2[10] = {1, 1, 10, 3, 10, 12, 0, 1, 3, 7};
+    imageMat e_2_mat(5, 2, e_2);
+
+    a_mat.separate(b_mat, c_mat, 3);
+
+    EXPECT_TRUE(*b_mat == e_1_mat);
+    EXPECT_TRUE(*c_mat == e_2_mat);
+}

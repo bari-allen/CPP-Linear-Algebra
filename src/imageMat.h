@@ -56,10 +56,12 @@ class imageMat {
 
         void separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col);
 
-    public: //Should be made private after testing
+    public: //TODO: Make these functions private after testing
         //Get the range of index values for a given row and column in the
         //flattened array
         int get_linear_index(int row, int col);
+
+        //TODO: Finish implementation of the following
         bool is_square() const;
         void swap_row(int row1, int row2);
         void mult_add(int addend, int multiplicant, int multiplication_factor);
@@ -155,7 +157,7 @@ bool imageMat::resize(int r_rows, int r_cols) {
         delete[] m_data;
     }
 
-    unsigned int white_pixel = 0xFFFFFF;
+    unsigned int white_pixel = 0x000000;
 
     m_data = new unsigned int[n_elements];
     if (m_data != nullptr) {
@@ -348,23 +350,24 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
 }
 
 void imageMat::separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col) {
-    if (split_col > n_cols) {
+    if (split_col >= n_cols) {
         throw std::invalid_argument("Split column cannot be greater than the number of columns in the matrix!");
     }
 
     int num_rows = n_rows;
     int num_cols = split_col;
-    int num_cols_2 = num_cols - split_col;
+    int num_cols_2 = n_cols - split_col;
 
     matrix_1->resize(num_rows, num_cols);
     matrix_2->resize(num_rows, num_cols_2);
 
     for (int row = 0; row < num_rows; ++row) {
         for (int col = 0; col < n_cols; ++col) {
+            unsigned int element = this->get(row, col);
             if (col < split_col) {
-                matrix_1->set(row, col, this->get(row, col));
+                matrix_1->set(row, col, element);
             } else {
-                matrix_2->set(row, col, this->get(row, col));
+                matrix_2->set(row, col - split_col, element);
             }
         }
     }
@@ -377,6 +380,10 @@ int imageMat::get_linear_index(int row, int col) {
     } else {
         return -1;
     }
+}
+
+bool imageMat::is_square() const {
+    return n_rows == n_cols;
 }
 
 
