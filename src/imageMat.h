@@ -86,14 +86,18 @@ imageMat::imageMat() {
 
 //Constructor that creates an a flattened matrix containing only white pixels
 imageMat::imageMat(int input_rows, int input_cols) {
+    if (input_rows <= 0 || input_cols <= 0) {
+        throw std::invalid_argument("Then number of rows/columns cannot be less than 1");
+    }
+
     n_rows = input_rows;
     n_cols = input_cols;
     n_elements = n_rows * n_cols;
     m_data = new unsigned int[n_elements];
-    unsigned int white_pixel = 0xFFFFFF;
+    unsigned int black_pixel = 0x000000;
 
     for (int i = 0; i < n_elements; ++i) {
-        m_data[i] = white_pixel;
+        m_data[i] = black_pixel;
     }
 }
 
@@ -101,6 +105,9 @@ imageMat::imageMat(int input_rows, int input_cols) {
 imageMat::imageMat(int input_rows, int input_cols, const unsigned int* input_data) {
     if (input_data == nullptr) {
         throw std::invalid_argument("The input_data cannot be null!");
+    }
+    if (input_rows <= 0 || input_cols <= 0) {
+        throw std::invalid_argument("The number of rows/columns cannot be less than 1");
     }
 
     n_rows = input_rows;
@@ -127,6 +134,10 @@ imageMat::imageMat(const imageMat& inputMat) {
 
 //A constructor that accepts a vector as input
 imageMat::imageMat(int input_rows, int input_cols, const std::vector<unsigned int> *input_data) {
+    if (input_rows <= 0 || input_cols <= 0) {
+        throw std::invalid_argument("The number of rows/columns cannot be less than 1");
+    }
+    
     n_rows = input_rows;
     n_cols = input_cols;
     n_elements = n_cols * n_rows;
@@ -149,6 +160,10 @@ imageMat::~imageMat() {
 
 //Deletes all the elements in the matrix, resizes, and the makes each pixel white
 bool imageMat::resize(int r_rows, int r_cols) {
+    if (r_rows <= 0 || r_cols <= 0) {
+        throw std::invalid_argument("The number of rows/columns cannot be less than 1");
+    }
+
     n_rows = r_rows;
     n_cols = r_cols;
     n_elements = n_rows * n_cols;
@@ -157,12 +172,12 @@ bool imageMat::resize(int r_rows, int r_cols) {
         delete[] m_data;
     }
 
-    unsigned int white_pixel = 0x000000;
+    unsigned int black_pixel = 0x000000;
 
     m_data = new unsigned int[n_elements];
     if (m_data != nullptr) {
         for (int i = 0; i < n_elements; ++i) {
-            m_data[i] = white_pixel;
+            m_data[i] = black_pixel;
         }
 
         return true;
