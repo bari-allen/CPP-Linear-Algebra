@@ -340,7 +340,7 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
 
             for (int lhs_col = 0; lhs_col < l_cols; ++lhs_col) {
 
-                //Same liear_indexing algorithm used below
+                //Same linear_indexing algorithm used below
                 int lhs_linear_index = ((lhs_row * l_cols) + lhs_col);
 
                 //Different linear indexing algorithm is used since the rhs has
