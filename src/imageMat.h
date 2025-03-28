@@ -403,5 +403,27 @@ bool imageMat::is_square() const {
     return n_rows == n_cols;
 }
 
+//Swaps the values in the inputted rows
+//The row numbers start at 0 for the first row and last_row - 1 for the last row
+void imageMat::swap_row(int row_1, int row_2) {
+    if (row_1 < 0 || row_2 < 0 || row_1 >= n_rows || row_2 >= n_rows) {
+        throw std::invalid_argument("The inputted rows cannot be less than 1 or greater than the number of rows in the matrix!");
+    }
+
+    int row_1_index = get_linear_index(row_1, 0);
+    int row_2_index = get_linear_index(row_2, 0);
+    unsigned int* temp = new unsigned int[n_cols];
+    std::copy(m_data + row_1_index, m_data + row_1_index + n_cols, temp);
+
+    for (int i = 0; i < n_cols; ++i) {
+        m_data[row_1_index + i] = m_data[row_2_index + i];
+        m_data[row_2_index + i] = temp[i];
+    }
+
+    if (temp != nullptr) {
+        delete[] temp;
+    }
+}
+
 
 #endif

@@ -125,3 +125,36 @@ TEST(Separate_Matrix, Advanced) {
     EXPECT_TRUE(*b_mat == e_1_mat);
     EXPECT_TRUE(*c_mat == e_2_mat);
 }
+
+TEST(Swap_Rows, Error) {
+    unsigned int a[6] = {0, 0, 0, 0, 0, 0};
+    imageMat a_mat(3, 2, a);
+    int out_of_bounds_row = -1;
+
+    EXPECT_THROW(a_mat.swap_row(out_of_bounds_row, 2), std::invalid_argument);
+
+    out_of_bounds_row = 4;
+    EXPECT_THROW(a_mat.swap_row(1, out_of_bounds_row), std::invalid_argument);
+}
+
+TEST(Swap_Rows, Simple) {
+    unsigned int a[6] = {10, 2, 11, 4, 3, 20};
+    imageMat a_mat(3, 2, a);
+
+    unsigned int e[6] = {3, 20, 11, 4, 10, 2};
+    imageMat e_mat(3, 2, e);
+
+    a_mat.swap_row(0, 2);
+    EXPECT_TRUE(a_mat == e_mat);
+}
+
+TEST(Swap_Rows, Intermediate) {
+    unsigned int a[12] = {10, 2, 31, 22, 5, 0, 11, 100, 250, 0, 1, 0};
+    imageMat a_mat(4, 3, a);
+
+    unsigned int e[12] = {10, 2, 31, 0, 1, 0, 11, 100, 250, 22, 5, 0};
+    imageMat e_mat(4, 3, e);
+
+    a_mat.swap_row(1, 3);
+    EXPECT_EQ(a_mat, e_mat);
+}
