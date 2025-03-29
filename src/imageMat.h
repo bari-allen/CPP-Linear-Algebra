@@ -14,9 +14,9 @@ class imageMat {
         imageMat(int nRows, int nCols);
         //Use an array of unsigned chars because each pixel in BMP is represented
         //and 3 BGR hex values
-        imageMat(int nRows, int nCols, const unsigned int* input_data);
+        imageMat(int nRows, int nCols, const double input_data);
         imageMat(const imageMat& inputMat);
-        imageMat(int nRows, int nCols, const std::vector<unsigned int> *input_data);
+        imageMat(int nRows, int nCols, const std::vector<double> *input_data);
 
         //The destructor
         ~imageMat();
@@ -26,17 +26,17 @@ class imageMat {
         void set_identity();
 
         //Element access functions
-        unsigned int get(int row, int col);
-        bool set(int row, int col, unsigned int rgb_data);
-        int get_rows();
-        int get_cols();
+        unsigned int get(int row, int col) const;
+        bool set(int row, int col, const double rgb_data);
+        int get_rows() const;
+        int get_cols() const;
 
         //Invert the current matrix if it is invertible
         bool inverse();
 
         //Overload the equals operator
         bool operator== (const imageMat& rhs) const;
-        bool compare_to(const imageMat& comparator, int tolerance);
+        bool compare_to(const imageMat& comparator, int tolerance) const;
 
         //Overload the +, -, and * operators
         //First takes two matrices as inputs
@@ -67,7 +67,7 @@ class imageMat {
         void mult_add(int addend, int multiplicant, int multiplication_factor);
         void mult_row(int row, int multiplication_factor);
         bool join(const imageMat& matrix2);
-        int row_with_max(int col_num, int starting_row);
+        int row_with_max(int col_num, int starting_row) const;
 
     private:
         double m_data;
