@@ -30,13 +30,16 @@ class imageMat {
         //Configuration functions
         void resize(int nRows, int nCols);
         void set_identity();
+        void clamp(const double low, const double high);
 
         //Element access functions
-        unsigned int get(int row, int col) const;
-        bool set(int row, int col, const double rgb_data);
+        double get(int row, int col) const;
+        bool set(int row, int col, double rgb_data);
         int get_rows() const;
         int get_cols() const;
-        std::unique_ptr<double> get_data() const;
+        std::unique_ptr<double[]> get_data() const;
+        std::unique_ptr<unsigned char[]> get_pixel_data() const;
+
 
         //Invert the current matrix if it is invertible
         bool inverse();
@@ -64,7 +67,7 @@ class imageMat {
         void separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col);
 
     public: //TODO: Make these functions private after testing
-        int get_linear_index(int row, int col);
+        int get_linear_index(int row, int col) const;
         bool is_square() const;
         void swap_row(int row1, int row2);
         void mult_add(int addend, int multiplicant, int multiplication_factor);
@@ -151,6 +154,7 @@ imageMat::imageMat(int rows, int cols, const std::vector<double>* input_data) {
 imageMat::~imageMat() {
     if (m_data != nullptr) {
         delete[] m_data;
+        m_data = nullptr;
     }
 }
 
@@ -188,5 +192,102 @@ void imageMat::set_identity() {
     }
 }
 
+/**
+ * Clamps the matrix to a certain range
+ * @param low the minimum value an item in the matrix can have
+ * @param high the maximum value an item in the matrix can have
+ * @throws invalid_argument when low is greater than high
+ */
+void imageMat::clamp(const double low, const double high) {
+    if (low > high) {
+        throw std::invalid_argument("The low value cannot be greater than the high value");
+    }
+
+    for (int i = 0; i < n_elements; ++i) {
+        double data = m_data[i];
+        m_data[i] = std::max(low, std::max(high, data));
+    }
+}
+
+/**
+ * Returns the item at the given row and column
+ * @param row the row of the desired item
+ * @param col the column of the desired item
+ * @throws invalid_argument when the row and column aren't in the matrix
+ * @returns the item at the given row and column
+ */
+double imageMat::get(int row, int col) const {
+    int linear_index = get_linear_index(row, col);
+
+    if (linear_index == -1) {
+        throw std::invalid_argument("Invalid row or column inputted!");
+    }
+
+    return m_data[linear_index];
+}
+
+/**
+ * Sets the item at the given row and column to the given RGB value
+ * @param row the row to be set
+ * @param col the column to be set
+ * @param rgb_data the data to be set
+ * @returns true when the item is properly set and false when the index doesn't exist
+ */
+bool imageMat::set(int row, int col, double rgb_data) {
+    int linear_index = get_linear_index(row, col);
+
+    if (linear_index == -1) {
+        return false;
+    }
+
+    m_data[linear_index] = rgb_data;
+    return true;
+}
+
+/**
+ * Returns the number of rows in the matrix
+ * @returns the number of rows in the matrix
+ */
+int imageMat::get_rows() const {
+    return n_rows;
+}
+
+/**
+ * Returns the number of columns in the matrix
+ * @returns the number of columns in the matrix
+ */
+int imageMat::get_cols() const {
+    return n_cols;
+}
+
+/**
+ * Returns a unique pointer with a COPY of the matrix data
+ * @returns a unique pointer with a COPY of the matrix data
+ */
+std::unique_ptr<double[]> imageMat::get_data() const {
+    auto copy_data = std::make_unique<double[]>(n_elements);
+    std::memcpy(copy_data.get(), m_data, n_elements * sizeof(double));
+    
+    return copy_data;
+}
+
+/**
+ * Returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
+ * @returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
+ */
+std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const {
+    std::unique_ptr<unsigned char[]> copy_data = std::make_unique<unsigned char[]>(n_elements);
+    
+    for (int i = 0; i < n_elements; ++i) {
+        double clamped_val = std::max(0.0, std::min(255.0, m_data[i]));
+        unsigned char char_val = static_cast<unsigned char>(clamped_val);
+        copy_data[i] = char_val;
+    }
+
+    return copy_data;
+}
+
+//TODO: Finish implementation
+bool imageMat::inverse() {}
 
 #endif
