@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <omp.h>
 #include <math.h>
+#include <cmath>
 #include <vector>
 #include <memory>
 
@@ -38,7 +39,7 @@ class imageMat {
         int get_rows() const;
         int get_cols() const;
         std::unique_ptr<double[]> get_data() const;
-        std::unique_ptr<unsigned char[]> get_pixel_data() const;
+        std::unique_ptr<unsigned char[]> get_pixel_data() const noexcept(true);
 
 
         //Invert the current matrix if it is invertible
@@ -46,7 +47,8 @@ class imageMat {
 
         //Overload the equals operator
         bool operator== (const imageMat& rhs) const;
-        bool compare_to(const imageMat& comparator, int tolerance) const;
+        bool compare_to(const imageMat& comparator, double tolerance) const noexcept;
+        bool close_enough(double val1, double val2) const;
 
         //Overload the +, -, and * operators
         //First takes two matrices as inputs
@@ -67,8 +69,9 @@ class imageMat {
         void separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col);
 
     public: //TODO: Make these functions private after testing
-        int get_linear_index(int row, int col) const;
-        bool is_square() const;
+        int get_linear_index(int row, int col) const noexcept;
+        double get_linear(int linear_index) const;
+        bool is_square() const noexcept;
         void swap_row(int row1, int row2);
         void mult_add(int addend, int multiplicant, int multiplication_factor);
         void mult_row(int row, int multiplication_factor);
@@ -275,7 +278,7 @@ std::unique_ptr<double[]> imageMat::get_data() const {
  * Returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
  * @returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
  */
-std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const {
+std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const noexcept(true){
     std::unique_ptr<unsigned char[]> copy_data = std::make_unique<unsigned char[]>(n_elements);
     
     for (int i = 0; i < n_elements; ++i) {
@@ -288,6 +291,113 @@ std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const {
 }
 
 //TODO: Finish implementation
-bool imageMat::inverse() {}
+bool imageMat::inverse() {return false;}
+
+/**
+ * Determines if two matrices are equal by seeing if each of their corresponding elements
+ * are close enough in value (difference is less than 1e-9) to each other
+ * @param rhs the other matrix
+ * @returns whether the two matrices are equal or close enough to equal (tolerance of 1e-9 difference)
+ */
+bool imageMat::operator==(const imageMat& rhs) const{
+    if (this->n_rows != rhs.get_rows() || this->n_cols != rhs.get_cols()) {
+        return false;
+    }
+
+    for (std::size_t i = 0; i < n_elements; ++i) {
+        auto elem_1 = m_data[i];
+        auto elem_2 = rhs.get_linear(i);
+
+        if (!close_enough(elem_1, elem_2)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Compares two matrices by finding the standard deviation of the differences between their values
+ * and checking whether it is less than the inputted tolerance
+ * If both the matrices are 1x1, then we use the distance between their only values and check if that
+ * is less than the tolerance
+ * @param rhs the other matrix being compared to
+ * @param tolerance the exclusive maximum that the standard deviation can be
+ * @returns whether the two matrices are similar
+ */
+bool imageMat::compare_to(const imageMat& rhs, double tolerance) const noexcept{
+    auto rhs_rows = rhs.get_rows();
+    auto rhs_cols = rhs.get_cols();
+
+    if(rhs_rows != n_rows || rhs_cols != n_cols) {
+        return false;
+    }
+
+    if (n_elements == 1) {
+        auto elem_1 = m_data[0];
+        auto elem_2 = rhs.get_linear(0);
+
+        return fabs(elem_1 - elem_2) < tolerance;
+    }
+
+    auto cum_sum = 0.0;
+    for (std::size_t i = 0; i < n_elements; ++i) {
+        auto elem_1 = m_data[i];
+        auto elem_2 = rhs.get_linear(i);
+        auto difference = elem_1 - elem_2;
+        
+        cum_sum += difference * difference;
+    }
+
+    auto final_val = sqrt(cum_sum / ((n_elements) - 1));
+
+    return final_val < tolerance;
+}
+
+/**
+ * Determine whether the distance between the two inputs is less than 1e-9
+ * @param val the first value
+ * @param other_val the second value
+ * @returns whether the distance between the two inputs is less than 1e-9
+ */
+bool imageMat::close_enough(double val, double other_val) const {
+    return fabs(val - other_val) < 1e-9;
+}
+
+/**
+ * Returns the linear index given the row and column numbers
+ * @param row the row of the element
+ * @param col the column of the element
+ * @returns the linear index to one of the elements
+ */
+int imageMat::get_linear_index(int row, int col) const noexcept {
+    if (row < 0 || col < 0 || row >= n_rows || row >= n_cols) {
+        return -1;
+    }
+
+    return (row * n_cols) + col;
+}
+
+/**
+ * Returns the element at the inputted linear index
+ * @param linear_index the linear index of the element
+ * @returns the element at the inputted linear index
+ * @throws invalid_argument when the linear index is greater than the number of elements or less than 0
+ */
+double imageMat::get_linear(int linear_index) const {
+    if (linear_index >= n_elements || linear_index < 0) {
+        throw std::invalid_argument("Index out of bounds!");
+    }
+    return m_data[linear_index];
+}
+
+/**
+ * Determines whether the matrix is a square matrix
+ * @returns whether the matrix is a square matrix
+ */
+bool imageMat::is_square() const noexcept {
+    return n_rows == n_cols;
+}
+
 
 #endif
