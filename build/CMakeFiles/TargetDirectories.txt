@@ -33,3 +33,10 @@
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/install.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/install/local.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/install/strip.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/imageMat_lib.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/edit_cache.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/list_install_components.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/install.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/install/local.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/install/strip.dir

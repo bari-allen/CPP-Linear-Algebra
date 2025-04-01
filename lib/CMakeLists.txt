@@ -1,0 +1,1 @@
+add_library(imageMat_lib imageMat.cpp)
