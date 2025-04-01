@@ -372,6 +372,68 @@ imageMat operator-(const imageMat& lhs, const double rhs) {
     return return_mat;
 }
 
+imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
+    if (lhs.get_cols() != rhs.get_rows()) {
+        throw std::invalid_argument("The rows of the left hand must match the columns of the right hand");
+    }
+
+    std::size_t l_rows = lhs.get_rows();
+    std::size_t l_cols = lhs.get_cols();
+    std::size_t r_rows = rhs.get_rows();
+    std::size_t r_cols = rhs.get_cols();
+
+    std::size_t data_rows = l_rows;
+    std::size_t data_cols = r_cols;
+    double* data = new double[l_rows * r_cols];
+
+    #pragma omp parallel for
+    for (std::size_t lhs_row = 0; lhs_row < l_rows; ++lhs_row) {
+        for (std::size_t rhs_col = 0; rhs_col < r_cols; ++rhs_col) {
+            auto index_data = 0.0;
+
+            for (std::size_t lhs_col = 0; lhs_col < l_cols; ++lhs_col) {
+                std::size_t l_index = (lhs_row * l_cols) + lhs_col;
+                std::size_t r_index = (lhs_col * r_cols) + rhs_col;
+
+                auto l_data = lhs.get_linear(l_index);
+                auto r_data = rhs.get_linear(r_index);
+
+                index_data += (l_data * r_data);
+            }
+            std::size_t data_index = (lhs_row * data_cols) + rhs_col;
+            data[data_index] = index_data;
+        }
+    }
+
+    imageMat return_mat(data_rows, data_cols, data);
+    delete[] data;
+    data = nullptr;
+
+    return return_mat;
+}
+
+imageMat operator*(const imageMat& lhs, const double rhs) {
+    using std::size_t;
+
+    size_t n_rows = lhs.get_rows();
+    size_t n_cols = lhs.get_cols();
+    auto n_elements = n_rows * n_cols;
+    auto* data = new double[n_elements];
+
+    for (size_t i = 0; i < n_elements; ++i) {
+        auto lhs_val = lhs.get_linear(i);
+        auto new_val = lhs_val * rhs;
+
+        data[i] = new_val;
+    }
+
+    imageMat return_mat(n_rows, n_cols, data);
+    delete[] data;
+    data = nullptr;
+
+    return return_mat;
+}
+
 /**
  * Returns the linear index given the row and column numbers
  * @param row the row of the element
