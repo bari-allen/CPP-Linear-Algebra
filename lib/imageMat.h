@@ -14,19 +14,19 @@
  * The purpose of this class is to allow for PCA transformations of images
  * @author Karl Haidinyak, bari-allen (GitHub)
  */
-class imageMat {
+class ImageMat {
     public:
         //Below are some various constructors that may or may not be useful
-        imageMat();
-        imageMat(int nRows, int nCols);
+        ImageMat();
+        ImageMat(int nRows, int nCols);
         //Use an array of unsigned chars because each pixel in BMP is represented
         //and 3 BGR hex values
-        imageMat(int nRows, int nCols, const double* input_data);
-        imageMat(const imageMat& inputMat);
-        imageMat(int nRows, int nCols, const std::vector<double> *input_data);
+        ImageMat(int nRows, int nCols, const double* input_data);
+        ImageMat(const ImageMat& inputMat);
+        ImageMat(int nRows, int nCols, const std::vector<double> *input_data);
 
         //The destructor
-        ~imageMat();
+        ~ImageMat();
 
         //Configuration functions
         void resize(int nRows, int nCols);
@@ -46,24 +46,24 @@ class imageMat {
         bool inverse();
 
         //Overload the equals operator
-        bool operator== (const imageMat& rhs) const;
-        bool within_tolerance(const imageMat& comparator, double tolerance) const noexcept;
+        bool operator== (const ImageMat& rhs) const;
+        bool within_tolerance(const ImageMat& comparator, double tolerance) const noexcept;
         bool close_enough(double val1, double val2) const;
 
         //Overload the +, -, and * operators
         //First takes two matrices as inputs
         //Second takes a scalar and a matrix as inputs
         //Third takes a matrix and a scalar as inputs
-        friend imageMat operator+ (const imageMat& lhs, const imageMat& rhs);
-        friend imageMat operator+ (const imageMat& lhs, const double& rhs);
+        friend ImageMat operator+ (const ImageMat& lhs, const ImageMat& rhs);
+        friend ImageMat operator+ (const ImageMat& lhs, const double& rhs);
 
-        friend imageMat operator- (const imageMat& lhs, const imageMat& rhs);
-        friend imageMat operator- (const imageMat& lhs, const unsigned char& rhs);
+        friend ImageMat operator- (const ImageMat& lhs, const ImageMat& rhs);
+        friend ImageMat operator- (const ImageMat& lhs, const unsigned char& rhs);
 
-        friend imageMat operator* (const imageMat& lhs, const imageMat& rhs);
-        friend imageMat operator* (const imageMat& lhs, const unsigned char& rhs);
+        friend ImageMat operator* (const ImageMat& lhs, const ImageMat& rhs);
+        friend ImageMat operator* (const ImageMat& lhs, const unsigned char& rhs);
 
-        void separate(imageMat* const matrix_1, imageMat* const matrix_2, int split_col);
+        void separate(ImageMat* const matrix_1, ImageMat* const matrix_2, int split_col);
 
     public: //TODO: Make these functions private after testing
         int get_linear_index(int row, int col) const noexcept;
@@ -72,7 +72,7 @@ class imageMat {
         void swap_row(int row1, int row2);
         void mult_add(int addend, int multiplicant, int multiplication_factor);
         void mult_row(int row, int multiplication_factor);
-        bool join(const imageMat& matrix2);
+        bool join(const ImageMat& matrix2);
         int row_with_max(int col_num, int starting_row) const;
 
     private:

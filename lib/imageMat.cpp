@@ -3,7 +3,7 @@
 /**
  * Default constructor with no paramters. Should never typically be used
  */
-imageMat::imageMat() {
+ImageMat::ImageMat() {
     n_rows = 0;
     n_cols = 0;
     n_elements = 0;
@@ -16,7 +16,7 @@ imageMat::imageMat() {
  * @param rows the number of rows
  * @param cols the number of columns
  */
-imageMat::imageMat(int rows, int cols) {
+ImageMat::ImageMat(int rows, int cols) {
     n_rows = rows;
     n_cols = cols;
     n_elements = n_rows * n_cols;
@@ -31,7 +31,7 @@ imageMat::imageMat(int rows, int cols) {
  * @param cols the number of columns
  * @param input_data a pointer to an array of doubles that will be copied into the matrix
  */
-imageMat::imageMat(int rows, int cols, const double* input_data) {
+ImageMat::ImageMat(int rows, int cols, const double* input_data) {
     n_rows = rows;
     n_cols = cols;
     n_elements = n_rows * n_cols;
@@ -41,10 +41,10 @@ imageMat::imageMat(int rows, int cols, const double* input_data) {
 }
 
 /**
- * Constructor that makes a copy of another instance of an imageMat
+ * Constructor that makes a copy of another instance of an ImageMat
  * @param input_mat the matrix that will be copied
  */
-imageMat::imageMat(const imageMat& input_mat) {
+ImageMat::ImageMat(const ImageMat& input_mat) {
     n_rows = input_mat.get_rows();
     n_cols = input_mat.get_cols();
     n_elements = n_rows * n_cols;
@@ -59,7 +59,7 @@ imageMat::imageMat(const imageMat& input_mat) {
  * @param cols the number of columns
  * @param input_data a pointer to a vector of doubles that will be copied into the matrix
  */
-imageMat::imageMat(int rows, int cols, const std::vector<double>* input_data) {
+ImageMat::ImageMat(int rows, int cols, const std::vector<double>* input_data) {
     n_rows = rows;
     n_cols = cols;
     n_elements = n_rows * n_cols;
@@ -72,7 +72,7 @@ imageMat::imageMat(int rows, int cols, const std::vector<double>* input_data) {
     std::copy(input_data->begin(), input_data->end(), m_data);
 }
 
-imageMat::~imageMat() {
+ImageMat::~ImageMat() {
     if (m_data != nullptr) {
         delete[] m_data;
         m_data = nullptr;
@@ -85,7 +85,7 @@ imageMat::~imageMat() {
  * @param cols the new number of columns for the matrix
  * @throw invalid_argument when the inputted rows or columns is less than 0
  */
-void imageMat::resize(int rows, int cols) {
+void ImageMat::resize(int rows, int cols) {
     if (rows <= 0 || cols <= 0) {
         throw std::invalid_argument("The number of rows or columns cannot be less than 1!");
     }
@@ -101,7 +101,7 @@ void imageMat::resize(int rows, int cols) {
  * Converts the matrix into the identity matrix if the matrix is square
  * @throw std::logic_error when the matrix is not square
  */
-void imageMat::set_identity() {
+void ImageMat::set_identity() {
     if (!is_square()) {
         throw std::logic_error("Cannot set a non-square matrix to the identity matrix!");
     }
@@ -119,7 +119,7 @@ void imageMat::set_identity() {
  * @param high the maximum value an item in the matrix can have
  * @throws invalid_argument when low is greater than high
  */
-void imageMat::clamp(const double low, const double high) {
+void ImageMat::clamp(const double low, const double high) {
     if (low > high) {
         throw std::invalid_argument("The low value cannot be greater than the high value");
     }
@@ -137,7 +137,7 @@ void imageMat::clamp(const double low, const double high) {
  * @throws invalid_argument when the row and column aren't in the matrix
  * @returns the item at the given row and column
  */
-double imageMat::get(int row, int col) const {
+double ImageMat::get(int row, int col) const {
     int linear_index = get_linear_index(row, col);
 
     if (linear_index == -1) {
@@ -154,7 +154,7 @@ double imageMat::get(int row, int col) const {
  * @param rgb_data the data to be set
  * @returns true when the item is properly set and false when the index doesn't exist
  */
-bool imageMat::set(int row, int col, double rgb_data) {
+bool ImageMat::set(int row, int col, double rgb_data) {
     int linear_index = get_linear_index(row, col);
 
     if (linear_index == -1) {
@@ -169,7 +169,7 @@ bool imageMat::set(int row, int col, double rgb_data) {
  * Returns the number of rows in the matrix
  * @returns the number of rows in the matrix
  */
-int imageMat::get_rows() const {
+int ImageMat::get_rows() const {
     return n_rows;
 }
 
@@ -177,7 +177,7 @@ int imageMat::get_rows() const {
  * Returns the number of columns in the matrix
  * @returns the number of columns in the matrix
  */
-int imageMat::get_cols() const {
+int ImageMat::get_cols() const {
     return n_cols;
 }
 
@@ -185,7 +185,7 @@ int imageMat::get_cols() const {
  * Returns a unique pointer with a COPY of the matrix data
  * @returns a unique pointer with a COPY of the matrix data
  */
-std::unique_ptr<double[]> imageMat::get_data() const {
+std::unique_ptr<double[]> ImageMat::get_data() const {
     auto copy_data = std::make_unique<double[]>(n_elements);
     std::memcpy(copy_data.get(), m_data, n_elements * sizeof(double));
     
@@ -196,7 +196,7 @@ std::unique_ptr<double[]> imageMat::get_data() const {
  * Returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
  * @returns a unique pointer with a COPY of the matrix data clamped and cast into  unsigned chars
  */
-std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const noexcept(true){
+std::unique_ptr<unsigned char[]> ImageMat::get_pixel_data() const noexcept(true){
     auto copy_data = std::make_unique<unsigned char[]>(n_elements);
     
     for (int i = 0; i < n_elements; ++i) {
@@ -209,7 +209,7 @@ std::unique_ptr<unsigned char[]> imageMat::get_pixel_data() const noexcept(true)
 }
 
 //TODO: Finish implementation
-bool imageMat::inverse() {return false;}
+bool ImageMat::inverse() {return false;}
 
 /**
  * Determines if two matrices are equal by seeing if each of their corresponding elements
@@ -217,7 +217,7 @@ bool imageMat::inverse() {return false;}
  * @param rhs the other matrix
  * @returns whether the two matrices are equal or close enough to equal (tolerance of 1e-9 difference)
  */
-bool imageMat::operator==(const imageMat& rhs) const{
+bool ImageMat::operator==(const ImageMat& rhs) const{
     if (this->n_rows != rhs.get_rows() || this->n_cols != rhs.get_cols()) {
         return false;
     }
@@ -243,7 +243,7 @@ bool imageMat::operator==(const imageMat& rhs) const{
  * @param tolerance the exclusive maximum that the standard deviation can be
  * @returns whether the two matrices are similar
  */
-bool imageMat::within_tolerance(const imageMat& rhs, double tolerance) const noexcept{
+bool ImageMat::within_tolerance(const ImageMat& rhs, double tolerance) const noexcept{
     auto rhs_rows = rhs.get_rows();
     auto rhs_cols = rhs.get_cols();
 
@@ -278,11 +278,11 @@ bool imageMat::within_tolerance(const imageMat& rhs, double tolerance) const noe
  * @param other_val the second value
  * @returns whether the distance between the two inputs is less than 1e-9
  */
-bool imageMat::close_enough(double val, double other_val) const {
+bool ImageMat::close_enough(double val, double other_val) const {
     return fabs(val - other_val) < 1e-9;
 }
 
-imageMat operator+(const imageMat& lhs, const imageMat& rhs) {
+ImageMat operator+(const ImageMat& lhs, const ImageMat& rhs) {
     if (lhs.get_rows() != rhs.get_rows() || lhs.get_cols() != rhs.get_cols()) {
         throw std::logic_error("Both matrices must be the same shape");
     }
@@ -300,14 +300,14 @@ imageMat operator+(const imageMat& lhs, const imageMat& rhs) {
         data[i] = new_val;
     }
 
-    imageMat return_mat(n_rows, n_cols, data);
+    ImageMat return_mat(n_rows, n_cols, data);
     delete[] data;
     data = nullptr;
 
     return return_mat;
 }
 
-imageMat operator+(const imageMat& lhs, const double rhs) {
+ImageMat operator+(const ImageMat& lhs, const double rhs) {
     int n_rows = lhs.get_rows();
     int n_cols = lhs.get_cols();
     int n_elements = n_rows * n_cols;
@@ -320,14 +320,14 @@ imageMat operator+(const imageMat& lhs, const double rhs) {
         data[i] = new_val;
     }
 
-    imageMat return_mat(n_rows, n_cols, data);
+    ImageMat return_mat(n_rows, n_cols, data);
     delete[] data;
     data = nullptr;
 
     return return_mat;
 }
 
-imageMat operator-(const imageMat& lhs, const imageMat& rhs) {
+ImageMat operator-(const ImageMat& lhs, const ImageMat& rhs) {
     if (lhs.get_rows() != rhs.get_rows() || lhs.get_cols() != rhs.get_cols()) {
         throw std::logic_error("Both matrices must be the same shape");
     }
@@ -345,14 +345,14 @@ imageMat operator-(const imageMat& lhs, const imageMat& rhs) {
         data[i] = new_val;
     }
 
-    imageMat return_mat(n_rows, n_cols, data);
+    ImageMat return_mat(n_rows, n_cols, data);
     delete[] data;
     data = nullptr;
 
     return return_mat;
 }
 
-imageMat operator-(const imageMat& lhs, const double rhs) {
+ImageMat operator-(const ImageMat& lhs, const double rhs) {
     int n_rows = lhs.get_rows();
     int n_cols = lhs.get_cols();
     int n_elements = n_rows * n_cols;
@@ -365,14 +365,14 @@ imageMat operator-(const imageMat& lhs, const double rhs) {
         data[i] = new_val;
     }
 
-    imageMat return_mat(n_rows, n_cols, data);
+    ImageMat return_mat(n_rows, n_cols, data);
     delete[] data;
     data = nullptr;
 
     return return_mat;
 }
 
-imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
+ImageMat operator*(const ImageMat& lhs, const ImageMat& rhs) {
     if (lhs.get_cols() != rhs.get_rows()) {
         throw std::invalid_argument("The rows of the left hand must match the columns of the right hand");
     }
@@ -405,14 +405,14 @@ imageMat operator*(const imageMat& lhs, const imageMat& rhs) {
         }
     }
 
-    imageMat return_mat(data_rows, data_cols, data);
+    ImageMat return_mat(data_rows, data_cols, data);
     delete[] data;
     data = nullptr;
 
     return return_mat;
 }
 
-imageMat operator*(const imageMat& lhs, const double rhs) {
+ImageMat operator*(const ImageMat& lhs, const double rhs) {
     using std::size_t;
 
     size_t n_rows = lhs.get_rows();
@@ -427,7 +427,7 @@ imageMat operator*(const imageMat& lhs, const double rhs) {
         data[i] = new_val;
     }
 
-    imageMat return_mat(n_rows, n_cols, data);
+    ImageMat return_mat(n_rows, n_cols, data);
     delete[] data;
     data = nullptr;
 
@@ -440,8 +440,8 @@ imageMat operator*(const imageMat& lhs, const double rhs) {
  * @param col the column of the element
  * @returns the linear index to one of the elements
  */
-int imageMat::get_linear_index(int row, int col) const noexcept {
-    if (row < 0 || col < 0 || row >= n_rows || row >= n_cols) {
+int ImageMat::get_linear_index(int row, int col) const noexcept {
+    if (row < 0 || col < 0 || row >= n_rows || col >= n_cols) {
         return -1;
     }
 
@@ -454,7 +454,7 @@ int imageMat::get_linear_index(int row, int col) const noexcept {
  * @returns the element at the inputted linear index
  * @throws invalid_argument when the linear index is greater than the number of elements or less than 0
  */
-double imageMat::get_linear(int linear_index) const {
+double ImageMat::get_linear(int linear_index) const {
     if (linear_index >= n_elements || linear_index < 0) {
         throw std::invalid_argument("Index out of bounds!");
     }
@@ -465,6 +465,27 @@ double imageMat::get_linear(int linear_index) const {
  * Determines whether the matrix is a square matrix
  * @returns whether the matrix is a square matrix
  */
-bool imageMat::is_square() const noexcept {
+bool ImageMat::is_square() const noexcept {
     return n_rows == n_cols;
 }
+
+void ImageMat::swap_row(int row_1, int row_2) {
+    if (row_1 == row_2) {
+        return;
+    }
+
+    auto r1_index = get_linear_index(row_1, 0);
+    auto r2_index = get_linear_index(row_2, 0);
+
+    if (r1_index == -1 || r2_index == -1) {
+        throw std::invalid_argument("Invalid row input");
+    }
+
+    double* temp = new double[n_cols];
+    std::memcpy(temp, m_data + r1_index, n_cols * sizeof(double));
+    std::memcpy(m_data + r1_index, m_data + r2_index, n_cols * sizeof(double));
+    std::memcpy(m_data + r2_index, temp, n_cols * sizeof(double));
+
+    delete[] temp;
+}
+
