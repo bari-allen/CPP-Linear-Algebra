@@ -22,12 +22,9 @@ class I_Matrix {
         I_Matrix(int n_rows, int n_cols);
         /**This constructor initializes the number of rows and columns with the
         inputted integers and also initializes the data to the inputted pointer */
-        I_Matrix(int n_rows, int n_cols, std::unique_ptr<T> input_data);
+        I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]>& input_data);
         /**The copy constructor */
         I_Matrix(const I_Matrix<T>& input_matrix);
-
-        //The destructor
-        ~I_Matrix();
 
         //Configuration functions
         bool resize(int n_rows, int n_cols);
@@ -37,10 +34,10 @@ class I_Matrix {
         bool set_element(int row, int col, T element);
         int get_num_rows() const;
         int get_num_cols() const;
-        std::unique_ptr<T> get_elements() const;
+        std::unique_ptr<T[]> get_elements() const;
 
         //Overload == operator
-        bool operator== (const I_Matrix<T>& rhs);
+        bool operator== (const I_Matrix<T>& rhs) const;
 
         //Overload +, -, and * operators (friends)
         template <class U> friend I_Matrix<U> operator+ (const I_Matrix<U>& lhs, const I_Matrix<U>& rhs);
@@ -61,7 +58,7 @@ class I_Matrix {
 
     //Private variables
     private:
-        T* matrix_data;
+        std::unique_ptr<T[]> matrix_data;
         int m_rows, m_cols, m_elements;
 };
 

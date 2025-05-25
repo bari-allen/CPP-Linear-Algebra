@@ -5,7 +5,7 @@ I_Matrix<T>::I_Matrix() {
     m_rows = 0;
     m_cols = 0;
     m_elements = 0;
-    matrix_data = nullptr;
+    matrix_data = std::make_unique<T[]>(0);
 }
 
 template <class T>
@@ -13,15 +13,15 @@ I_Matrix<T>::I_Matrix(int n_rows, int n_cols) {
     m_rows = n_rows;
     m_cols = n_cols;
     m_elements = m_rows * m_cols;
-    matrix_data = new T[m_elements];
+    matrix_data = std::make_unique<T[]>(m_elements);
 }
 
 template <class T>
-I_Matrix<T>::I_Matrix(int n_rows, int n_cols, std::unique_ptr<T> input_data) {
+I_Matrix<T>::I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]>& input_data) {
     m_rows = n_rows;
     m_cols = n_cols;
     m_elements = m_rows * m_cols;
-    matrix_data = input_data.get();
+    matrix_data = std::move(input_data);
 }
 
 template <class T>
@@ -29,12 +29,7 @@ I_Matrix<T>::I_Matrix(const I_Matrix<T>& input_matrix) {
     m_rows = input_matrix->m_rows;
     m_cols = input_matrix->m_cols;
     m_elements = m_rows * m_cols;
-    matrix_data = std::memcpy(matrix_data, input_matrix->matrix_data, sizeof(T) * m_elements);
-}
-
-template <class T>
-I_Matrix<T>::~I_Matrix() {
-    delete[] matrix_data;
+    std::copy(input_matrix.get_elements().get(), input_matrix.get_elements().get() + m_elements, matrix_data.get());
 }
 
 template <class T> 
@@ -42,10 +37,9 @@ bool I_Matrix<T>::resize(int n_rows, int n_cols) {
     m_rows = n_rows;
     m_cols = n_cols;
     m_elements = m_cols * m_rows;
-    delete[] matrix_data;
+    matrix_data = std::make_unique<T[]>(m_elements);
 
-    matrix_data = new(std::nothrow) T[m_elements];
-    return matrix_data == nullptr;
+    return true;
 }
 
 template <class T>
@@ -78,10 +72,27 @@ int I_Matrix<T>::get_num_cols() const {
 }
 
 template <class T>
-std::unique_ptr<T> I_Matrix<T>::get_elements() const {
-    T* copy = new T[m_elements];
-    std::memcpy(copy, matrix_data, sizeof(T) * m_elements);
-    return std::make_unique(copy);
+std::unique_ptr<T[]> I_Matrix<T>::get_elements() const {
+    auto copy_data = std::make_unique<T[]>(m_elements);
+    std::copy(matrix_data.get(), matrix_data.get() + m_elements, copy_data.get());
+
+    return copy_data;
+}
+
+template <class T>
+bool I_Matrix<T>::operator==(const I_Matrix<T>& rhs) const {
+    if (m_rows != rhs.m_rows || m_cols != rhs.m_cols) {
+        return false;
+    }
+
+    std::unique_ptr<T[]> rhs_data = rhs.get_elements();
+    for (int i = 0; i < m_elements; ++i) {
+        if (matrix_data[i] != rhs_data[i]) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 template <class T>
