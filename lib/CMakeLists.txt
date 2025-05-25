@@ -1,1 +1,2 @@
-add_library(imageMat_lib imageMat.cpp)
+add_library(imageMat_lib INTERFACE)
+target_include_directories(imageMat_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
