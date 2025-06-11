@@ -178,12 +178,111 @@ I_Matrix<T> operator+(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
 }
 
 template <class T>
+I_Matrix<T> operator+(const T& lhs, const I_Matrix<T>& rhs) {
+    int rows = rhs.rows();
+    int cols = rhs.cols();
+    int n_elements = rows * cols;
+    auto data = std::make_unique<T[]>(n_elements);
+
+    for (int i = 0; i < n_elements; ++i) {
+        data[i] = lhs + rhs.matrix_data[i];
+    }
+
+    I_Matrix<T> matrix(rows, cols, data);
+    return matrix;
+}
+
+template <class T>
+I_Matrix<T> operator+(const I_Matrix<T>& lhs, const T& rhs) {
+    return rhs + lhs;
+}
+
+template <class T>
+I_Matrix<T> operator-(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
+    if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
+        throw std::invalid_argument("Size mismatch between arguments!");
+    }
+
+    auto data = std::make_unique<T[]>(lhs.rows() * lhs.cols());
+    auto lhs_data = lhs.matrix_data;
+    auto rhs_data = rhs.matrix_data;
+
+    for (int i = 0; i < lhs.rows() * lhs.cols(); ++i) {
+        data[i] = lhs_data[i] - rhs_data[i];
+    }
+
+    I_Matrix<T> matrix(lhs.rows(), lhs.cols(), data);
+    return matrix;
+}
+
+template <class T>
+I_Matrix<T> operator-(const I_Matrix<T>& lhs, const T& rhs) {
+    int rows = lhs.rows();
+    int cols = lhs.cols();
+    int n_elements = rows * cols;
+    auto data = std::make_unique<T[]>(n_elements);
+
+    for (int i = 0; i < n_elements; ++i) {
+        data[i] = lhs.matrix_data[i] - rhs;
+    }
+
+    I_Matrix<T> matrix(rows, cols, data);
+    return matrix;
+}
+
+template <class T>
+I_Matrix<T> operator-(const T& lhs, const I_Matrix<T>& rhs) {
+    int rows = rhs.rows();
+    int cols = rhs.cols();
+    int n_elements = rows * cols;
+    auto data = std::make_unique<T[]>(n_elements);
+
+    for (int i = 0; i < n_elements; ++i) {
+        data[i] = lhs - rhs.matrix_data[i];
+    }
+
+    I_Matrix<T> matrix(rows, cols, data);
+    return matrix;
+}
+
+template <class T>
+I_Matrix<T> operator*(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
+    if (lhs.cols() != rhs.rows()) {
+        throw std::invalid_argument("Left-hand side's rows do not match right-hand side's columns");
+    }
+
+    int m_rows = lhs.rows();
+    int m_cols = rhs.cols();
+    int n_elements = m_rows * m_cols;
+    auto data = std::make_unique<T[]>(n_elements);
+
+    for (int lhs_row = 0; lhs_row < lhs.rows(); ++lhs_row) {
+        for (int rhs_col = 0; rhs_col < rhs.cols(); ++rhs_col) {
+            T cum_sum{};
+            for (int rhs_row = 0; rhs_row < rhs.rows(); ++rhs_row) {
+                int lhs_index = rhs_row + (lhs_row * lhs.cols());
+                int rhs_index = rhs_col + (rhs_row * rhs.cols());
+
+                T sum = rhs.matrix_data[rhs_index] * lhs.matrix_data[lhs_index];
+                cum_sum += sum;
+            }
+
+            int data_index = rhs_col + (lhs_row * m_cols);
+            data[data_index] = cum_sum;
+        }
+    }
+
+    I_Matrix<T> matrix(m_rows, m_cols, data);
+    return matrix;
+}
+
+template <class T>
 int I_Matrix<T>::linear_index(int row, int col) {
     if (row > m_rows || col > m_cols || row < 0 || col < 0) {
         return -1;
     }
 
-    return row + (col * m_cols);
+    return col + (row * m_cols);
 }
 
 #endif
