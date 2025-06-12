@@ -204,5 +204,95 @@ TEST(DOT_PRODUCT, 14x14) {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Time Taken: " << duration.count() << " microseconds" <<std::endl;
+    std::cout << "14 x 14 Test: " << duration.count() << " microseconds" <<std::endl;
+}
+
+TEST(DETERMINANT, 3x3) {
+    int data[9] = {7, -4, 2, 3, 1, -5, 2, 2, -5};
+    auto unique_data = std::make_unique<int[]>(9);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 9);
+    I_Matrix<int> matrix(3, 3, unique_data);
+
+    double expected = 23.0;
+    double actual = det(matrix);
+
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(DETERMINANT, 4x4) {
+    int data[16] = {2, 1, 3, 4, 0, -1, 2, 1, 3, 2, 0, 5, -1, 3, 2, 1};
+    auto unique_data = std::make_unique<int[]>(16);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 16);
+    I_Matrix<int> matrix(4, 4, unique_data);
+
+    double expected = 35.0;
+    double actual = det(matrix);
+
+    ASSERT_EQ(actual, expected);
+}
+
+TEST(DETERMINANT, ANOTHER_4x4) {
+    auto start = std::chrono::high_resolution_clock::now();
+    int data[16] = {0, -5, -2, -2, 2, 4, -2, 0, -3, -1, 2, 1, 3, 3, 5, -4};
+    auto unique_data = std::make_unique<int[]>(16);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 16);
+    I_Matrix<int> matrix(4, 4, unique_data);
+
+    double expected = 176.0;
+    double actual = det(matrix);
+
+    ASSERT_EQ(actual, expected);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "4x4 Determinant Test: " << duration.count() << " microseconds" <<std::endl;
+}
+
+TEST(DETERMINANT, 5x5) {
+    auto start = std::chrono::high_resolution_clock::now();
+    int data[25] = {0, 3, 4, 0, -5,
+                    -5, -4, 2, 1, 4,
+                    -3, -1, 0, -3, -1,
+                    5, -3, -1, 2, 2,
+                    4, -4, 2, -5, 1};
+    auto unique_data = std::make_unique<int[]>(25);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 25);
+    I_Matrix<int> matrix(5, 5, unique_data);
+
+    double expected = 3186.0;
+    double actual = det(matrix);
+
+    ASSERT_EQ(actual, expected);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "5x5 Determinant Test: " << duration.count() << " microseconds" <<std::endl;
+}
+
+TEST(DETERMINANT, 10x10) {
+    auto start = std::chrono::high_resolution_clock::now();
+    int data[64] = {8, 8, 4, 6, 4, 5, 1, 4,
+                    5, 8, 5, 4, 1, 1, 2, 3,
+                    6, 5, 6, 6, 4, 6, 3, 4,
+                    6, 6, 6, 3, 2, 5, 3, 7,
+                    1, 7, 4, 7, 3, 1, 5, 2,
+                    1, 9, 6, 3, 9, 7, 5, 3,
+                    2, 3, 5, 4, 7, 7, 2, 2,
+                    6, 5, 8, 4, 2, 7, 8, 6};
+    auto unique_data = std::make_unique<int[]>(64);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 64);
+    I_Matrix<int> matrix(8, 8, unique_data);
+
+    double expected = 8968.0;
+    double actual = det(matrix);
+
+    ASSERT_EQ(actual, expected);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "10x10 Determinant Test: " << duration.count() << " microseconds" <<std::endl;
+}
+
+TEST(DETERMINANT, ERROR) {
+    auto unique_data = std::make_unique<int[]>(1);
+    I_Matrix<int> matrix(5, 2, unique_data);
+
+    ASSERT_THROW(det(matrix), std::logic_error);
 }

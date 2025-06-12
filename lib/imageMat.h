@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+#include <type_traits>
 
 /**
  * A matrix class that will include functions to perform simple linear algebra operations
@@ -189,6 +190,16 @@ class I_Matrix {
          */
         template <class U> friend I_Matrix<U> operator* (const I_Matrix<U>& lhs, const U& rhs);
 
+        /**
+         * Finds the determinant of the inputted matrix
+         * For the documentation about the algorithm, see the det_helper documentation
+         * 
+         * @param mat the inputted matrix
+         * @return the determinant of the matrix
+         * @throws throws a logic_error if the inputted matrix is not square
+         */
+        template <class U> friend double det(const I_Matrix<U>& mat);
+
     //Private functions
     private:
         /**
@@ -200,6 +211,24 @@ class I_Matrix {
          *          row and/or column are out of bounds
          */
         int linear_index(int row, int col);
+
+        /**
+         * A recursive helper function that finds the determinant of a square matrix
+         * 
+         * This function uses a recursive cofactor expansion to shrink larger matrices into
+         * 2x2 matrices to find their determinants
+         * 
+         * This function does not use the I_Matrix object since it is easier to work directly
+         * with a pointer
+         * 
+         * A link to cofactor expansion:
+         * https://textbooks.math.gatech.edu/ila/determinants-cofactors.html
+         * 
+         * @param size the number of rows and columns the square matrix has
+         * @param data a pointer to the matrix data
+         * @returns the determinant of the sub-matrix
+         */
+        template <class U> friend double det_helper(const int size, const std::unique_ptr<U[]>& data);
 
     //Private variables
     private:
@@ -454,6 +483,53 @@ I_Matrix<T> operator*(const I_Matrix<T>& lhs, const T& rhs) {
 
     I_Matrix<T> matrix(rows, cols, data);
     return matrix;
+}
+
+template <class T>
+double det_helper(const int size, const std::unique_ptr<T[]>& data) {
+    //If the matrix is a 1x1 matrix we return the only value in the matrix
+    if (size == 1) {
+        return static_cast<double>(data[0]);
+    }
+
+    //If the matrix is a 2x2 matrix we compute the determinant like normal
+    if (size == 2) {
+        auto value = (data[0] * data[3]) - (data[1] * data[2]);
+        return static_cast<double>(value);
+    }
+
+    double det = 0.0;
+    for (int excluded = 0; excluded < size; ++excluded) {
+        auto new_data = std::make_unique<T[]>((size - 1) * (size - 1));
+        int i = 0;
+
+        for (int row = 1; row < size; ++row) {
+            for (int col = 0; col < size; ++col) {
+                if (col == excluded) {continue;}
+
+                int index = col + (row * size);
+                new_data[i++] = data[index];
+            }
+        }
+
+        int multiplier = (excluded % 2 == 0) ? 1 : -1;
+        auto value = data[excluded];
+        det += static_cast<double>((multiplier * value) * det_helper(size - 1, new_data));
+    }
+
+    return det;
+}
+
+
+template <class T>
+double det(const I_Matrix<T>& mat) {
+    static_assert(std::is_arithmetic<T>::value, "Type must be an arithmetic type");
+
+    if (mat.rows() != mat.cols()) {
+        throw std::logic_error("Cannot compute the determinant of a non-square matrix!");
+    }
+
+    return det_helper(mat.rows(), mat.matrix_data);
 }
 
 template <class T>
