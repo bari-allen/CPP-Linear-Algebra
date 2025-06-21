@@ -200,6 +200,8 @@ class I_Matrix {
          */
         template <class U> friend double det(const I_Matrix<U>& mat);
 
+        template <class U> friend I_Matrix<U> inv(const I_Matrix<U>& mat);
+
     //Private functions
     private:
         /**
@@ -229,6 +231,8 @@ class I_Matrix {
          * @returns the determinant of the sub-matrix
          */
         template <class U> friend double det_helper(const int size, const std::unique_ptr<U[]>& data);
+
+        template <class U> friend std::unique_ptr<U[]> det_cofactors(const int size, const int excluded,  const std::unique_ptr<U[]>& data);
 
     //Private variables
     private:
@@ -486,6 +490,23 @@ I_Matrix<T> operator*(const I_Matrix<T>& lhs, const T& rhs) {
 }
 
 template <class T>
+std::unique_ptr<T[]> det_cofactors(const int size, const int excluded, const std::unique_ptr<T[]>& data) {
+    int i = 0;
+    auto cofactors = std::make_unique<T[]>((size - 1) * (size - 1));
+
+    for (int row = 1; row < size; ++row) {
+        for (int col = 0; col < size; ++col) {
+            if (col == excluded) {continue;}
+
+            int index = col + (row * size);
+            cofactors[i++] = data[index];
+        }
+    }
+
+    return cofactors;
+}
+
+template <class T>
 double det_helper(const int size, const std::unique_ptr<T[]>& data) {
     //If the matrix is a 1x1 matrix we return the only value in the matrix
     if (size == 1) {
@@ -500,21 +521,11 @@ double det_helper(const int size, const std::unique_ptr<T[]>& data) {
 
     double det = 0.0;
     for (int excluded = 0; excluded < size; ++excluded) {
-        auto new_data = std::make_unique<T[]>((size - 1) * (size - 1));
-        int i = 0;
-
-        for (int row = 1; row < size; ++row) {
-            for (int col = 0; col < size; ++col) {
-                if (col == excluded) {continue;}
-
-                int index = col + (row * size);
-                new_data[i++] = data[index];
-            }
-        }
+        auto cofactors = det_cofactors(size, excluded, data);
 
         int multiplier = (excluded % 2 == 0) ? 1 : -1;
         auto value = data[excluded];
-        det += static_cast<double>((multiplier * value) * det_helper(size - 1, new_data));
+        det += static_cast<double>((multiplier * value) * det_helper(size - 1, cofactors));
     }
 
     return det;
@@ -529,7 +540,16 @@ double det(const I_Matrix<T>& mat) {
         throw std::logic_error("Cannot compute the determinant of a non-square matrix!");
     }
 
+    if (mat.rows() == 0 || mat.cols() == 0) {
+        throw std::logic_error("Cannot compute the determinant of a matrix with size 0");
+    }
+
     return det_helper(mat.rows(), mat.matrix_data);
+}
+
+template <class T>
+I_Matrix<T> inv(const I_Matrix<T>& mat) {
+    
 }
 
 template <class T>

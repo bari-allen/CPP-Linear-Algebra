@@ -18,3 +18,4 @@ add_subdirectory(lib)
 add_subdirectory(tests)
 
 set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
