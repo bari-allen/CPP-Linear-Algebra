@@ -5,6 +5,8 @@
 #include <cstring>
 #include <stdexcept>
 #include <type_traits>
+#include <thread>
+#include <vector>
 
 /**
  * A matrix class that will include functions to perform simple linear algebra operations
@@ -200,7 +202,23 @@ class I_Matrix {
          */
         template <class U> friend double det(const I_Matrix<U>& mat);
 
-        template <class U> friend I_Matrix<U> inv(const I_Matrix<U>& mat);
+        /**
+         * Finds the inverse of the inputted matrix
+         * For the documentation about the algorithm, see the det_helper documentation
+         * 
+         * Note that all matrices, no matter the inputted type, will be converted to a matrix of doubles
+         * 
+         * @param mat the inputted matrix
+         * @return the inverse of the matrix
+         * @throws throws logic_error if the inputted matrix is not square or is not invertible
+         */
+        template <class U> friend I_Matrix<double> inv(const I_Matrix<U>& mat);
+
+        /**
+         * Returns the transpose of the given matrix
+         * @returns the transpose of the given matrix
+         */
+        I_Matrix<T> transpose(void) const;
 
     //Private functions
     private:
@@ -232,7 +250,36 @@ class I_Matrix {
          */
         template <class U> friend double det_helper(const int size, const std::unique_ptr<U[]>& data);
 
-        template <class U> friend std::unique_ptr<U[]> det_cofactors(const int size, const int excluded,  const std::unique_ptr<U[]>& data);
+
+        /**
+         * Returns the cofactors of the given point in the matrix data excluding the data points 
+         * from the excluded row and column
+         * 
+         * @param size the number of both rows and columns of the matrix
+         * @param excluded_col the column whos data is not included in the cofactor data
+         * @param data the input data
+         * @param excluded_row a optional parameter to exclude data from the inputted row, default in 0
+         * @returns the list of cofactors of the given data point
+         */
+        template <class U> friend std::unique_ptr<U[]> get_cofactors(const int size, const int excluded_col,  const std::unique_ptr<U[]>& data, const int excluded_row);
+
+        /**
+         * A function that assists with inverting the given matrix
+         * 
+         * Uses the adjugate matrix to calculate the inverse of the matrix then multiplies the matrix by the
+         * inverse of the determinant
+         * 
+         * If the matrix is singular or near-singluar then an exception is thrown
+         * 
+         * A link to the adjugate algorithm:
+         * https://www.mathsisfun.com/algebra/matrix-inverse-minors-cofactors-adjugate.html
+         * 
+         * @param size the number of rows and columns of the matrix
+         * @param data the matrix data
+         * @returns the inverse of the matrix if one exists
+         * @throws throws logic_error if the matrix is singular or near-singular
+         */
+        template <class U> friend I_Matrix<U> inv_helper(const int size, const std::unique_ptr<U[]>& data);
 
     //Private variables
     private:
@@ -331,8 +378,11 @@ bool I_Matrix<T>::operator==(const I_Matrix<T>& rhs) const {
 
     std::unique_ptr<T[]> rhs_data = rhs.get_elements();
     for (int i = 0; i < m_elements; ++i) {
-        if (matrix_data[i] != rhs_data[i]) {
+        if (!std::is_floating_point<T>::value && matrix_data[i] != rhs_data[i]) {
             return false;
+        } else if (matrix_data[i] - rhs_data[i] > 0.0000000001 
+                || rhs_data[i] - matrix_data[i] > 0.0000000001) {
+                return false;
         }
     }
 
@@ -490,13 +540,32 @@ I_Matrix<T> operator*(const I_Matrix<T>& lhs, const T& rhs) {
 }
 
 template <class T>
-std::unique_ptr<T[]> det_cofactors(const int size, const int excluded, const std::unique_ptr<T[]>& data) {
+I_Matrix<T> I_Matrix<T>::transpose() const {
+    auto transpose_data = std::make_unique<T[]>(m_rows * m_cols);
+
+    for (int row = 0; row < m_rows; ++row) {
+        for (int col = 0; col < m_cols; ++col) {
+            int index = col + (row * m_cols);
+            int trans_index = row + (col * m_rows);
+
+            transpose_data[trans_index] = matrix_data[index];
+        }
+    }
+
+    I_Matrix<T> transpose_mat(m_cols, m_rows, transpose_data);
+
+    return transpose_mat;
+}
+
+template <class T>
+std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col, const std::unique_ptr<T[]>& data, const int excluded_row = 0) {
     int i = 0;
     auto cofactors = std::make_unique<T[]>((size - 1) * (size - 1));
 
-    for (int row = 1; row < size; ++row) {
+    for (int row = 0; row < size; ++row) {
+        if (row == excluded_row) {continue;}
         for (int col = 0; col < size; ++col) {
-            if (col == excluded) {continue;}
+            if (col == excluded_col) {continue;}
 
             int index = col + (row * size);
             cofactors[i++] = data[index];
@@ -506,8 +575,10 @@ std::unique_ptr<T[]> det_cofactors(const int size, const int excluded, const std
     return cofactors;
 }
 
+constexpr int MAX_THREAD_DEPTH = 1;
+
 template <class T>
-double det_helper(const int size, const std::unique_ptr<T[]>& data) {
+double det_helper(const int size, const std::unique_ptr<T[]>& data, int depth = 0) {
     //If the matrix is a 1x1 matrix we return the only value in the matrix
     if (size == 1) {
         return static_cast<double>(data[0]);
@@ -519,13 +590,35 @@ double det_helper(const int size, const std::unique_ptr<T[]>& data) {
         return static_cast<double>(value);
     }
 
+    std::vector<std::thread> threads;
+    std::vector<double> results(size, 0.0);
     double det = 0.0;
+
     for (int excluded = 0; excluded < size; ++excluded) {
-        auto cofactors = det_cofactors(size, excluded, data);
+        auto cofactors = get_cofactors(size, excluded, data);
 
         int multiplier = (excluded % 2 == 0) ? 1 : -1;
         auto value = data[excluded];
-        det += static_cast<double>((multiplier * value) * det_helper(size - 1, cofactors));
+        
+        if (depth >= MAX_THREAD_DEPTH || size <= 5) {
+            results[excluded] = static_cast<double>((multiplier * value) 
+                * det_helper(size - 1, cofactors, depth + 1));
+            continue;
+        }
+
+        threads.emplace_back([=, cofactors = std::move(cofactors), &results]() {
+            results[excluded] = static_cast<double>((multiplier * value) 
+                * det_helper(size - 1, cofactors, depth + 1));
+        });
+    }
+
+    for (auto& thread : threads) {
+        if (thread.joinable())
+            thread.join();
+    }
+
+    for (double partial : results) {
+        det += partial;
     }
 
     return det;
@@ -548,8 +641,60 @@ double det(const I_Matrix<T>& mat) {
 }
 
 template <class T>
-I_Matrix<T> inv(const I_Matrix<T>& mat) {
-    
+I_Matrix<double> inv_helper(const int size, const std::unique_ptr<T[]>& data) {
+    auto inv_data = std::make_unique<double[]>(size * size);
+    double det = det_helper(size, data);
+        
+    if (det == 0.0 || det < 0.0000001) {
+        throw std::logic_error("Matrix is singular or near-singular!");
+    }
+
+
+    if (size == 1) {
+        inv_data[0] = 1 / data[0];
+        I_Matrix<double> mat(size, size, inv_data);
+    }
+
+    if (size == 2) {
+        inv_data[0] = static_cast<double>(data[3]);
+        inv_data[1] = static_cast<double>(-data[1]);
+        inv_data[2] = static_cast<double>(-data[2]);
+        inv_data[3] = static_cast<double>(data[0]);
+
+        I_Matrix<double> mat(size, size, inv_data);
+        return (1 / det) * mat;
+    }
+
+    for (int excluded_row = 0; excluded_row < size; ++excluded_row) {
+        for (int excluded_col = 0; excluded_col < size; ++excluded_col) {
+
+            auto cofactors = get_cofactors(size, excluded_col, data, excluded_row);
+            double cofactor_det = det_helper(size - 1, cofactors);
+            int multiplier = (excluded_col + excluded_row) % 2 == 0 ? 1 : -1;
+
+            int index = excluded_col + (excluded_row * size);
+            inv_data[index] = multiplier * cofactor_det;
+        }
+    }
+
+    I_Matrix<double> mat(size, size, inv_data);
+    auto adjugate_mat = mat.transpose();
+    return (1.0 / det) * adjugate_mat;
+}
+
+template <class T>
+I_Matrix<double> inv(const I_Matrix<T>& mat) {
+    static_assert(std::is_arithmetic<T>::value, "Type must be an arithmetic type");
+
+    if (mat.rows() != mat.cols()) {
+        throw std::logic_error("Cannot compute the inverse of a non-square matrix!");
+    }
+
+    if (mat.rows() == 0 || mat.cols() == 0) {
+        throw std::logic_error("Cannot compute the inverse of a matrix with size 0!");
+    }
+
+    return inv_helper(mat.rows(), mat.matrix_data);
 }
 
 template <class T>

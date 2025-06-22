@@ -296,3 +296,83 @@ TEST(DETERMINANT, ERROR) {
 
     ASSERT_THROW(det(matrix), std::logic_error);
 }
+
+TEST(INVERSE, 3x3) {
+    int data[9] = {2, 4, -6, 7, 3, 5, 1, -2, 4};
+    auto unique_data = std::make_unique<int[]>(9);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 9);
+    I_Matrix<int> matrix(3, 3, unique_data);
+
+    double expected_data[9] = {11/27.0, -2/27.0, 19/27.0, -23/54.0, 
+                        7/27.0, -26/27.0, -17/54.0, 4/27.0, -11/27.0};
+    auto unique_expected_data = std::make_unique<double[]>(9);
+    std::memcpy(unique_expected_data.get(), expected_data, sizeof(double) * 9);
+    I_Matrix<double> expected(3, 3, unique_expected_data);
+
+    auto actual = inv(matrix);
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(INVERSE, 4x4) {
+    int data[16] = {1, 0, 0, 1, 0, 2, 1, 2, 2, 1, 0, 1, 2, 0, 1, 4};
+    auto unique_data = std::make_unique<int[]>(16);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 16);
+    I_Matrix<int> matrix(4, 4, unique_data);
+
+    double expected_data[16] = {-2.0, -0.5, 1.0, 0.5, 
+                                1.0, 0.5, 0, -0.5, 
+                                -8.0, -1.0, 2.0, 2.0, 
+                                3.0, 0.5, -1.0, -0.5};
+    auto unique_expected_data = std::make_unique<double[]>(16);
+    std::memcpy(unique_expected_data.get(), expected_data, sizeof(double) * 16);
+    I_Matrix<double> expected(4, 4, unique_expected_data);
+
+    auto actual = inv(matrix);
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(INVERSE, SINGULAR) {
+    int data[9] = {1, 2, 2, 1, 2, 2, 3, 2, -1};
+    auto unique_data = std::make_unique<int[]>(9);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 9);
+    I_Matrix<int> singular_mat(3, 3, unique_data);
+
+    ASSERT_THROW(inv(singular_mat), std::logic_error);
+}
+
+TEST(INVERSE, NEAR_SINGULAR) {
+    double data[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0001, 8.0001, 9.0001};
+    auto unique_data = std::make_unique<double[]>(9);
+    std::memcpy(unique_data.get(), data, sizeof(double) * 9);
+    I_Matrix<double> near_singular(3, 3, unique_data);
+
+    ASSERT_THROW(inv(near_singular), std::logic_error);
+}
+
+TEST(TRANSPOSE, SQUARE) {
+    int data[4] = {1, 2, 3, 4};
+    auto unique_data = std::make_unique<int[]>(4);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 4);
+    I_Matrix<int> square_mat(2, 2, unique_data);
+
+    int expected_data[4] = {1, 3, 2, 4};
+    auto unique_expected_data = std::make_unique<int[]>(4);
+    std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 4);
+    I_Matrix<int> expected(2, 2, unique_expected_data);
+
+    ASSERT_EQ(square_mat.transpose(), expected);
+}
+
+TEST(TRANSPOSE, NON_SQUARE) {
+    int data[6] = {1, 2, 3, 4, 5, 6};
+    auto unique_data = std::make_unique<int[]>(6);
+    std::memcpy(unique_data.get(), data, sizeof(int) * 6);
+    I_Matrix<int> non_square(3, 2, unique_data);
+
+    int expected_data[6] = {1, 3, 5, 2, 4, 6};
+    auto unique_expected_data = std::make_unique<int[]>(6);
+    std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 6);
+    I_Matrix<int> expected(2, 3, unique_expected_data);
+
+    ASSERT_EQ(non_square.transpose(), expected);
+}
