@@ -33,6 +33,7 @@
 /mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/install/local.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/lib/CMakeFiles/install/strip.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/matrix_test.dir
+/mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/vector_tests.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/edit_cache.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/rebuild_cache.dir
 /mnt/c/Users/karl/C++ Projects/PCA/build/tests/CMakeFiles/list_install_components.dir
