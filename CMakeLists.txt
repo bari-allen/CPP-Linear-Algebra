@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.14)
-project(PCA)
+cmake_minimum_required(VERSION 3.20)
+project(C++_Linear_Algebra
+        VERSION 0.1.0
+        HOMEPAGE_URL "https://github.com/bari-allen/CPP-PCA"
+        LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

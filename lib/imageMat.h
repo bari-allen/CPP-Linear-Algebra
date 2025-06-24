@@ -558,7 +558,9 @@ I_Matrix<T> I_Matrix<T>::transpose() const {
 }
 
 template <class T>
-std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col, const std::unique_ptr<T[]>& data, const int excluded_row = 0) {
+std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col, 
+                                    const std::unique_ptr<T[]>& data, 
+                                    const int excluded_row = 0) {
     int i = 0;
     auto cofactors = std::make_unique<T[]>((size - 1) * (size - 1));
 

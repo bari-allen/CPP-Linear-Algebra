@@ -10,9 +10,7 @@
 template <class T>
 class I_Vector {
     public:
-        I_Vector(void);
-
-        I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data);
+        I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data) noexcept;
 
         uint32_t get_dims(void) const;
 
@@ -30,39 +28,31 @@ class I_Vector {
         static double fast_sqrt(const T number);
 
     private:
-        std::unique_ptr<T[]> vec_data;
-        int dims;
+        std::unique_ptr<T[]> m_data;
+        int m_dims;
 };
 
 template <class T>
-I_Vector<T>::I_Vector() {
-    dims = 0;
-    vec_data = std::make_unique<T[]>(dims);
-}
-
-template <class T>
-I_Vector<T>::I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data) {
-    dims = dimensions;
-    vec_data = std::move(input_data);
-}
+I_Vector<T>::I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data) noexcept
+    : m_dims(dimensions), m_data(std::move(input_data))  {}
 
 template <class T>
 uint32_t I_Vector<T>::get_dims() const{
-    return dims;
+    return m_dims;
 }
 
 template <class T>
 T I_Vector<T>::get_element(const uint32_t index) const{
-    if (index >= dims) 
+    if (index >= m_dims)
         throw std::invalid_argument("Index out of bounds");
 
-    return vec_data[index];
+    return m_data[index];
 }
 
 
 
 template <class T>
-float fast_sqrt(const T number) {
+double fast_sqrt(const T number) {
     static_assert(std::is_arithmetic<T>::value, "Inputted type must be a number!");
 
     if (number < 0)
@@ -76,11 +66,13 @@ float fast_sqrt(const T number) {
     reinterpret = 0x1FBD3F7D + (reinterpret >> 1);
     f_number = std::bit_cast<float>(reinterpret);
 
-    f_number = 0.5 * (f_number + (saved / f_number));
-    f_number = 0.5 * (f_number + (saved / f_number));
-    f_number = 0.5 * (f_number + (saved / f_number));
+    double d_number = static_cast<double>(f_number);
+    
+    d_number = 0.5 * (d_number + (saved / d_number));
+    d_number = 0.5 * (d_number + (saved / d_number));
+    d_number = 0.5 * (d_number + (saved / d_number));
 
-    return f_number;
+    return d_number;
 }
 
 #endif
