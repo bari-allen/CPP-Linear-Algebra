@@ -1,4 +1,4 @@
 external
-build/
+build
 .vscode
 .cache

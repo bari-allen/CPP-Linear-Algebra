@@ -1,4 +1,4 @@
-#include "../lib/imageMat.h"
+#include "../include/imageMat.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <chrono>

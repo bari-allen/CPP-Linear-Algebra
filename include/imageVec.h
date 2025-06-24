@@ -10,7 +10,7 @@
 template <class T>
 class I_Vector {
     public:
-        I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data) noexcept;
+        I_Vector(const uint32_t dimensions = 0, const std::unique_ptr<T[]>& input_data = nullptr) noexcept;
 
         uint32_t get_dims(void) const;
 
@@ -34,7 +34,14 @@ class I_Vector {
 
 template <class T>
 I_Vector<T>::I_Vector(const uint32_t dimensions, const std::unique_ptr<T[]>& input_data) noexcept
-    : m_dims(dimensions), m_data(std::move(input_data))  {}
+    : m_dims(dimensions)  {
+        if (input_data != nullptr) {
+            m_data = std::move(input_data);
+        } else {
+            m_data = std::make_unique<T[]>(m_dims);
+        }
+
+}
 
 template <class T>
 uint32_t I_Vector<T>::get_dims() const{
