@@ -20,6 +20,7 @@ TEST(DOT_PRODUCT, SIMPLE) {
     I_Matrix<int> expected(1, 1, unique_expected_data);
 
     auto actual = lhs * rhs;
+    
     ASSERT_EQ(actual, expected);
 }
 

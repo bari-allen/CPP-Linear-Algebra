@@ -6,6 +6,8 @@
 #include <type_traits>
 #include <cstdint>
 #include <bit>
+#include <cmath>
+#include <limits>
 
 template <class T>
 class I_Vector {
@@ -24,9 +26,8 @@ class I_Vector {
         template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs);
 
         static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
-        static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
-        static double fast_sqrt(const T number);
-
+        static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);        
+    
     private:
         std::unique_ptr<T[]> m_data;
         int m_dims;
@@ -61,25 +62,34 @@ T I_Vector<T>::get_element(const uint32_t index) const{
 template <class T>
 double fast_sqrt(const T number) {
     static_assert(std::is_arithmetic<T>::value, "Inputted type must be a number!");
+    static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 must be used!");
 
-    if (number < 0)
+    if (number < 0) [[unlikely]]
         throw std::invalid_argument("The input cannot be negative!");
 
-    float f_number = static_cast<float>(number);
-    float saved = static_cast<float>(number);
-    uint32_t reinterpret;
-    
-    reinterpret = std::bit_cast<uint32_t>(f_number);
-    reinterpret = 0x1FBD3F7D + (reinterpret >> 1);
-    f_number = std::bit_cast<float>(reinterpret);
+    if (std::is_floating_point_v<T> && std::fpclassify(number) != FP_NORMAL) {
+        return std::sqrt(number);
+    }
 
-    double d_number = static_cast<double>(f_number);
-    
-    d_number = 0.5 * (d_number + (saved / d_number));
-    d_number = 0.5 * (d_number + (saved / d_number));
-    d_number = 0.5 * (d_number + (saved / d_number));
+    double d_number = static_cast<double>(number);
+    double half = d_number * 0.5;
+    //magic = 3/2 * 2^52 * (1023 - 0.043)
+    constexpr uint64_t magic = 0x5FE339A0219FF02D;
+    constexpr double three_halves = 1.5;
 
-    return d_number;
+    //Evil bit hack
+    uint64_t reinterpret = std::bit_cast<uint64_t>(d_number);
+    reinterpret = magic - (reinterpret >> 1);
+    d_number = std::bit_cast<double>(reinterpret);
+
+    //Newton iterations to get a closer approximation
+    d_number = d_number * (three_halves - (half * d_number * d_number));
+    d_number = d_number * (three_halves - (half * d_number * d_number));
+    d_number = d_number * (three_halves - (half * d_number * d_number));
+    d_number = d_number * (three_halves - (half * d_number * d_number));
+
+    //S * S ^ -1/2 = S ^ 1/2
+    return d_number * static_cast<double>(number);
 }
 
 #endif

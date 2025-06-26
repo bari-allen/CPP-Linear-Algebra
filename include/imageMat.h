@@ -248,7 +248,7 @@ class I_Matrix {
          * @param data a pointer to the matrix data
          * @returns the determinant of the sub-matrix
          */
-        template <class U> friend double det_helper(const int size, const std::unique_ptr<U[]>& data);
+        static double det_helper(const int size, const std::unique_ptr<T[]>& data, const int depth = 0);
 
 
         /**
@@ -261,7 +261,8 @@ class I_Matrix {
          * @param excluded_row a optional parameter to exclude data from the inputted row, default in 0
          * @returns the list of cofactors of the given data point
          */
-        template <class U> friend std::unique_ptr<U[]> get_cofactors(const int size, const int excluded_col,  const std::unique_ptr<U[]>& data, const int excluded_row);
+        static std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col,  
+                                                const std::unique_ptr<T[]>& data, const int excluded_row = 0);
 
         /**
          * A function that assists with inverting the given matrix
@@ -279,7 +280,7 @@ class I_Matrix {
          * @returns the inverse of the matrix if one exists
          * @throws throws logic_error if the matrix is singular or near-singular
          */
-        template <class U> friend I_Matrix<U> inv_helper(const int size, const std::unique_ptr<U[]>& data);
+        static I_Matrix<double> inv_helper(const int size, const std::unique_ptr<T[]>& data);
 
     //Private variables
     private:
@@ -558,9 +559,9 @@ I_Matrix<T> I_Matrix<T>::transpose() const {
 }
 
 template <class T>
-std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col, 
+std::unique_ptr<T[]> I_Matrix<T>::get_cofactors(const int size, const int excluded_col, 
                                     const std::unique_ptr<T[]>& data, 
-                                    const int excluded_row = 0) {
+                                    const int excluded_row) {
     int i = 0;
     auto cofactors = std::make_unique<T[]>((size - 1) * (size - 1));
 
@@ -580,7 +581,7 @@ std::unique_ptr<T[]> get_cofactors(const int size, const int excluded_col,
 constexpr int MAX_THREAD_DEPTH = 1;
 
 template <class T>
-double det_helper(const int size, const std::unique_ptr<T[]>& data, int depth = 0) {
+double I_Matrix<T>::det_helper(const int size, const std::unique_ptr<T[]>& data, const int depth) {
     //If the matrix is a 1x1 matrix we return the only value in the matrix
     if (size == 1) {
         return static_cast<double>(data[0]);
@@ -597,7 +598,7 @@ double det_helper(const int size, const std::unique_ptr<T[]>& data, int depth = 
     double det = 0.0;
 
     for (int excluded = 0; excluded < size; ++excluded) {
-        auto cofactors = get_cofactors(size, excluded, data);
+        auto cofactors = I_Matrix<T>::get_cofactors(size, excluded, data);
 
         int multiplier = (excluded % 2 == 0) ? 1 : -1;
         auto value = data[excluded];
@@ -639,11 +640,11 @@ double det(const I_Matrix<T>& mat) {
         throw std::logic_error("Cannot compute the determinant of a matrix with size 0");
     }
 
-    return det_helper(mat.rows(), mat.matrix_data);
+    return I_Matrix<T>::det_helper(mat.rows(), mat.matrix_data);
 }
 
 template <class T>
-I_Matrix<double> inv_helper(const int size, const std::unique_ptr<T[]>& data) {
+I_Matrix<double> I_Matrix<T>::inv_helper(const int size, const std::unique_ptr<T[]>& data) {
     auto inv_data = std::make_unique<double[]>(size * size);
     double det = det_helper(size, data);
         
@@ -696,7 +697,7 @@ I_Matrix<double> inv(const I_Matrix<T>& mat) {
         throw std::logic_error("Cannot compute the inverse of a matrix with size 0!");
     }
 
-    return inv_helper(mat.rows(), mat.matrix_data);
+    return I_Matrix<T>::inv_helper(mat.rows(), mat.matrix_data);
 }
 
 template <class T>
