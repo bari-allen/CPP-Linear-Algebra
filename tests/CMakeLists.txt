@@ -12,7 +12,7 @@ target_include_directories(vector_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries(matrix_test GTest::gtest_main imageMat_lib)
-target_link_libraries(vector_tests GTest::gtest_main imageVec_lib)
+target_link_libraries(vector_tests GTest::gtest_main imageVec_lib vector_exception_lib)
 
 target_include_directories(matrix_test PRIVATE ${gtest_SOURCE_DIR}/include)
 target_include_directories(vector_tests PRIVATE ${gtest_SOURCE_DIR}/include)

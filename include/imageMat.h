@@ -25,7 +25,7 @@ class I_Matrix {
         I_Matrix(int n_rows, int n_cols);
         /**This constructor initializes the number of rows and columns with the
         inputted integers and also initializes the data to the inputted pointer */
-        I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]>& input_data);
+        I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]> input_data);
         /**The copy constructor */
         I_Matrix(const I_Matrix<T>& input_matrix);
 
@@ -305,7 +305,7 @@ I_Matrix<T>::I_Matrix(int n_rows, int n_cols) {
 }
 
 template <class T>
-I_Matrix<T>::I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]>& input_data) {
+I_Matrix<T>::I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]> input_data) {
     m_rows = n_rows;
     m_cols = n_cols;
     m_elements = m_rows * m_cols;
@@ -506,7 +506,7 @@ I_Matrix<T> operator*(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
         }
     }
 
-    I_Matrix<T> matrix(m_rows, m_cols, data);
+    I_Matrix<T> matrix(m_rows, m_cols, std::move(data));
     return matrix;
 }
 
@@ -521,7 +521,7 @@ I_Matrix<T> operator*(const T& lhs, const I_Matrix<T>& rhs) {
         data[i] = rhs.matrix_data[i] * lhs;
     }
 
-    I_Matrix<T> matrix(rows, cols, data);
+    I_Matrix<T> matrix(rows, cols, std::move(data));
     return matrix;
 }
 
@@ -553,7 +553,7 @@ I_Matrix<T> I_Matrix<T>::transpose() const {
         }
     }
 
-    I_Matrix<T> transpose_mat(m_cols, m_rows, transpose_data);
+    I_Matrix<T> transpose_mat(m_cols, m_rows, std::move(transpose_data));
 
     return transpose_mat;
 }
@@ -655,7 +655,7 @@ I_Matrix<double> I_Matrix<T>::inv_helper(const int size, const std::unique_ptr<T
 
     if (size == 1) {
         inv_data[0] = 1 / data[0];
-        I_Matrix<double> mat(size, size, inv_data);
+        I_Matrix<double> mat(size, size, std::move(inv_data));
     }
 
     if (size == 2) {
@@ -664,7 +664,7 @@ I_Matrix<double> I_Matrix<T>::inv_helper(const int size, const std::unique_ptr<T
         inv_data[2] = static_cast<double>(-data[2]);
         inv_data[3] = static_cast<double>(data[0]);
 
-        I_Matrix<double> mat(size, size, inv_data);
+        I_Matrix<double> mat(size, size, std::move(inv_data));
         return (1 / det) * mat;
     }
 
@@ -680,7 +680,7 @@ I_Matrix<double> I_Matrix<T>::inv_helper(const int size, const std::unique_ptr<T
         }
     }
 
-    I_Matrix<double> mat(size, size, inv_data);
+    I_Matrix<double> mat(size, size, std::move(inv_data));
     auto adjugate_mat = mat.transpose();
     return (1.0 / det) * adjugate_mat;
 }

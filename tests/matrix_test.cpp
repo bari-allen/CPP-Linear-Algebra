@@ -7,17 +7,17 @@ TEST(DOT_PRODUCT, SIMPLE) {
     int lhs_data[3] = {1, 2, 5};
     auto unique_lhs_data = std::make_unique<int[]>(3);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 3);
-    I_Matrix<int> lhs(1, 3, unique_lhs_data);
+    I_Matrix<int> lhs(1, 3, std::move(unique_lhs_data));
 
     int rhs_data[3] = {10, 20, 1};
     auto unique_rhs_data = std::make_unique<int[]>(3);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 3);
-    I_Matrix<int> rhs(3, 1, unique_rhs_data);
+    I_Matrix<int> rhs(3, 1, std::move(unique_rhs_data));
 
     int expected_data[1] = {55};
     auto unique_expected_data = std::make_unique<int[]>(1);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 1);
-    I_Matrix<int> expected(1, 1, unique_expected_data);
+    I_Matrix<int> expected(1, 1, std::move(unique_expected_data));
 
     auto actual = lhs * rhs;
     
@@ -28,17 +28,17 @@ TEST(DOT_PRODUCT, INTERMEDIATE) {
     int lhs_data[6] = {1, 2, 5, 10, 0, 20};
     auto unique_lhs_data = std::make_unique<int[]>(6);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 6);
-    I_Matrix<int> lhs(2, 3, unique_lhs_data);
+    I_Matrix<int> lhs(2, 3, std::move(unique_lhs_data));
 
     int rhs_data[6] = {10, 20, 20, 0, 1, 2};
     auto unique_rhs_data = std::make_unique<int[]>(6);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 6);
-    I_Matrix<int> rhs(3, 2, unique_rhs_data);
+    I_Matrix<int> rhs(3, 2, std::move(unique_rhs_data));
 
     int expected_data[4] = {55, 30, 120, 240};
     auto unique_expected_data = std::make_unique<int[]>(4);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 4);
-    I_Matrix<int> expected(2, 2, unique_expected_data);
+    I_Matrix<int> expected(2, 2, std::move(unique_expected_data));
 
     auto actual = lhs * rhs;
     ASSERT_EQ(actual, expected);
@@ -48,17 +48,17 @@ TEST(DOT_PRODUCT, HARD) {
     int lhs_data[9] = {9, 2, 7, 5, 8, -1, 0, 0, -3};
     auto unique_lhs_data = std::make_unique<int[]>(9);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 9);
-    I_Matrix<int> lhs(3, 3, unique_lhs_data);
+    I_Matrix<int> lhs(3, 3, std::move(unique_lhs_data));
 
     int rhs_data[9] = {-1, 2, 13, -3, 0, 7, -4, -1, 12};
     auto unique_rhs_data = std::make_unique<int[]>(9);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 9);
-    I_Matrix<int> rhs(3, 3, unique_rhs_data);
+    I_Matrix<int> rhs(3, 3, std::move(unique_rhs_data));
 
     int expected_data[9] = {-43, 11, 215, -25, 11, 109, 12, 3, -36};
     auto unique_expected_data = std::make_unique<int[]>(9);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 9);
-    I_Matrix<int> expected(3, 3, unique_expected_data);
+    I_Matrix<int> expected(3, 3, std::move(unique_expected_data));
 
     auto actual = lhs * rhs;
     ASSERT_EQ(actual, expected);
@@ -68,17 +68,17 @@ TEST(DOT_PRODUCT, VERY_HARD) {
     int lhs_data[12] = {-1, 1, -1, 5, 2, -5, 6, -5, 1, -5, 6, 0};
     auto unique_lhs_data = std::make_unique<int[]>(12);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 12);
-    I_Matrix<int> lhs(4, 3, unique_lhs_data);
+    I_Matrix<int> lhs(4, 3, std::move(unique_lhs_data));
 
     int rhs_data[6] = {6, 5, 5, -6, 6, 0};
     auto unique_rhs_data = std::make_unique<int[]>(6);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 6);
-    I_Matrix<int> rhs(3, 2, unique_rhs_data);
+    I_Matrix<int> rhs(3, 2, std::move(unique_rhs_data));
 
     int expected_data[8] = {-7, -11, 10, 13, 17, 60, 0, -61};
     auto unique_expected_data = std::make_unique<int[]>(8);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 8);
-    I_Matrix<int> expected(4, 2, unique_expected_data);
+    I_Matrix<int> expected(4, 2, std::move(unique_expected_data));
 
     auto start = std::chrono::high_resolution_clock::now();
     
@@ -106,7 +106,7 @@ TEST(DOT_PRODUCT, EXTREME) {
                         73, 74, 75, 76, 77, 78, 79, 80, 81};
     auto unique_lhs_data = std::make_unique<int[]>(81);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 81);
-    I_Matrix<int> lhs(9, 9, unique_lhs_data);
+    I_Matrix<int> lhs(9, 9, std::move(unique_lhs_data));
 
     int rhs_data[81] = {81, 80, 79, 78, 77, 76, 75, 74, 73,
                         72, 71, 70, 69, 68, 67, 66, 65, 64,
@@ -119,7 +119,7 @@ TEST(DOT_PRODUCT, EXTREME) {
                         9, 8, 7, 6, 5, 4, 3, 2, 1};
     auto unique_rhs_data = std::make_unique<int[]>(81);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 81);
-    I_Matrix<int> rhs(9, 9, unique_rhs_data);
+    I_Matrix<int> rhs(9, 9, std::move(unique_rhs_data));
 
     int expected_data[81] = {1485, 1440, 1395, 1350, 1305, 1260, 1215, 1170, 1125,
                             5130, 5004, 4878, 4752, 4626, 4500, 4374, 4248, 4122,
@@ -132,7 +132,7 @@ TEST(DOT_PRODUCT, EXTREME) {
                             30645, 29952, 29259, 28566, 27873, 27180, 26487, 25794, 25101};
     auto unique_expected_data = std::make_unique<int[]>(81);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 81);
-    I_Matrix<int> expected(9, 9, unique_expected_data);
+    I_Matrix<int> expected(9, 9, std::move(unique_expected_data));
 
     auto actual = lhs * rhs;
 
@@ -162,7 +162,7 @@ TEST(DOT_PRODUCT, 14x14) {
                         8, 8, 3, 2, 3, 6, 3, 6, 5, 7, 0, 8, 4, 6};
     auto unique_lhs_data = std::make_unique<int[]>(196);
     std::memcpy(unique_lhs_data.get(), lhs_data, sizeof(int) * 196);
-    I_Matrix<int> lhs(14, 14, unique_lhs_data);
+    I_Matrix<int> lhs(14, 14, std::move(unique_lhs_data));
 
     int rhs_data[196] = {5, 8, 2, 3, 9, 7, 5, 3, 4, 5, 3, 3, 7, 9,
                         9, 9, 7, 3, 2, 3, 9, 7, 7, 5, 1, 2, 2, 8,
@@ -180,7 +180,7 @@ TEST(DOT_PRODUCT, 14x14) {
                         6, 6, 7, 9, 1, 9, 6, 0, 3, 8, 4, 1, 4, 5};
     auto unique_rhs_data = std::make_unique<int[]>(196);
     std::memcpy(unique_rhs_data.get(), rhs_data, sizeof(int) * 196);
-    I_Matrix<int> rhs(14, 14, unique_rhs_data);
+    I_Matrix<int> rhs(14, 14, std::move(unique_rhs_data));
 
     int expected_data[196] = {330, 373, 383, 376, 347, 440, 318, 290, 339, 287, 299, 272, 385, 241,
                             413, 400, 375, 254, 291, 392, 348, 367, 287, 302, 197, 249, 316, 217,
@@ -198,7 +198,7 @@ TEST(DOT_PRODUCT, 14x14) {
                             355, 393, 347, 303, 333, 411, 325, 265, 365, 261, 249, 225, 322, 265};
     auto unique_expected_data = std::make_unique<int[]>(196);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 196);
-    I_Matrix<int> expected(14, 14, unique_expected_data);
+    I_Matrix<int> expected(14, 14, std::move(unique_expected_data));
 
     auto actual = lhs * rhs;
     ASSERT_EQ(actual, expected);
@@ -212,7 +212,7 @@ TEST(DETERMINANT, 3x3) {
     int data[9] = {7, -4, 2, 3, 1, -5, 2, 2, -5};
     auto unique_data = std::make_unique<int[]>(9);
     std::memcpy(unique_data.get(), data, sizeof(int) * 9);
-    I_Matrix<int> matrix(3, 3, unique_data);
+    I_Matrix<int> matrix(3, 3, std::move(unique_data));
 
     double expected = 23.0;
     double actual = det(matrix);
@@ -224,7 +224,7 @@ TEST(DETERMINANT, 4x4) {
     int data[16] = {2, 1, 3, 4, 0, -1, 2, 1, 3, 2, 0, 5, -1, 3, 2, 1};
     auto unique_data = std::make_unique<int[]>(16);
     std::memcpy(unique_data.get(), data, sizeof(int) * 16);
-    I_Matrix<int> matrix(4, 4, unique_data);
+    I_Matrix<int> matrix(4, 4, std::move(unique_data));
 
     double expected = 35.0;
     double actual = det(matrix);
@@ -237,7 +237,7 @@ TEST(DETERMINANT, ANOTHER_4x4) {
     int data[16] = {0, -5, -2, -2, 2, 4, -2, 0, -3, -1, 2, 1, 3, 3, 5, -4};
     auto unique_data = std::make_unique<int[]>(16);
     std::memcpy(unique_data.get(), data, sizeof(int) * 16);
-    I_Matrix<int> matrix(4, 4, unique_data);
+    I_Matrix<int> matrix(4, 4, std::move(unique_data));
 
     double expected = 176.0;
     double actual = det(matrix);
@@ -257,7 +257,7 @@ TEST(DETERMINANT, 5x5) {
                     4, -4, 2, -5, 1};
     auto unique_data = std::make_unique<int[]>(25);
     std::memcpy(unique_data.get(), data, sizeof(int) * 25);
-    I_Matrix<int> matrix(5, 5, unique_data);
+    I_Matrix<int> matrix(5, 5, std::move(unique_data));
 
     double expected = 3186.0;
     double actual = det(matrix);
@@ -280,7 +280,7 @@ TEST(DETERMINANT, 10x10) {
                     6, 5, 8, 4, 2, 7, 8, 6};
     auto unique_data = std::make_unique<int[]>(64);
     std::memcpy(unique_data.get(), data, sizeof(int) * 64);
-    I_Matrix<int> matrix(8, 8, unique_data);
+    I_Matrix<int> matrix(8, 8, std::move(unique_data));
 
     double expected = 8968.0;
     double actual = det(matrix);
@@ -293,7 +293,7 @@ TEST(DETERMINANT, 10x10) {
 
 TEST(DETERMINANT, ERROR) {
     auto unique_data = std::make_unique<int[]>(1);
-    I_Matrix<int> matrix(5, 2, unique_data);
+    I_Matrix<int> matrix(5, 2, std::move(unique_data));
 
     ASSERT_THROW(det(matrix), std::logic_error);
 }
@@ -302,13 +302,13 @@ TEST(INVERSE, 3x3) {
     int data[9] = {2, 4, -6, 7, 3, 5, 1, -2, 4};
     auto unique_data = std::make_unique<int[]>(9);
     std::memcpy(unique_data.get(), data, sizeof(int) * 9);
-    I_Matrix<int> matrix(3, 3, unique_data);
+    I_Matrix<int> matrix(3, 3, std::move(unique_data));
 
     double expected_data[9] = {11/27.0, -2/27.0, 19/27.0, -23/54.0, 
                         7/27.0, -26/27.0, -17/54.0, 4/27.0, -11/27.0};
     auto unique_expected_data = std::make_unique<double[]>(9);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(double) * 9);
-    I_Matrix<double> expected(3, 3, unique_expected_data);
+    I_Matrix<double> expected(3, 3, std::move(unique_expected_data));
 
     auto actual = inv(matrix);
     ASSERT_EQ(expected, actual);
@@ -318,7 +318,7 @@ TEST(INVERSE, 4x4) {
     int data[16] = {1, 0, 0, 1, 0, 2, 1, 2, 2, 1, 0, 1, 2, 0, 1, 4};
     auto unique_data = std::make_unique<int[]>(16);
     std::memcpy(unique_data.get(), data, sizeof(int) * 16);
-    I_Matrix<int> matrix(4, 4, unique_data);
+    I_Matrix<int> matrix(4, 4, std::move(unique_data));
 
     double expected_data[16] = {-2.0, -0.5, 1.0, 0.5, 
                                 1.0, 0.5, 0, -0.5, 
@@ -326,7 +326,7 @@ TEST(INVERSE, 4x4) {
                                 3.0, 0.5, -1.0, -0.5};
     auto unique_expected_data = std::make_unique<double[]>(16);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(double) * 16);
-    I_Matrix<double> expected(4, 4, unique_expected_data);
+    I_Matrix<double> expected(4, 4, std::move(unique_expected_data));
 
     auto actual = inv(matrix);
     ASSERT_EQ(expected, actual);
@@ -336,7 +336,7 @@ TEST(INVERSE, SINGULAR) {
     int data[9] = {1, 2, 2, 1, 2, 2, 3, 2, -1};
     auto unique_data = std::make_unique<int[]>(9);
     std::memcpy(unique_data.get(), data, sizeof(int) * 9);
-    I_Matrix<int> singular_mat(3, 3, unique_data);
+    I_Matrix<int> singular_mat(3, 3, std::move(unique_data));
 
     ASSERT_THROW(inv(singular_mat), std::logic_error);
 }
@@ -345,7 +345,7 @@ TEST(INVERSE, NEAR_SINGULAR) {
     double data[9] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0001, 8.0001, 9.0001};
     auto unique_data = std::make_unique<double[]>(9);
     std::memcpy(unique_data.get(), data, sizeof(double) * 9);
-    I_Matrix<double> near_singular(3, 3, unique_data);
+    I_Matrix<double> near_singular(3, 3, std::move(unique_data));
 
     ASSERT_THROW(inv(near_singular), std::logic_error);
 }
@@ -354,12 +354,12 @@ TEST(TRANSPOSE, SQUARE) {
     int data[4] = {1, 2, 3, 4};
     auto unique_data = std::make_unique<int[]>(4);
     std::memcpy(unique_data.get(), data, sizeof(int) * 4);
-    I_Matrix<int> square_mat(2, 2, unique_data);
+    I_Matrix<int> square_mat(2, 2, std::move(unique_data));
 
     int expected_data[4] = {1, 3, 2, 4};
     auto unique_expected_data = std::make_unique<int[]>(4);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 4);
-    I_Matrix<int> expected(2, 2, unique_expected_data);
+    I_Matrix<int> expected(2, 2, std::move(unique_expected_data));
 
     ASSERT_EQ(square_mat.transpose(), expected);
 }
@@ -368,12 +368,12 @@ TEST(TRANSPOSE, NON_SQUARE) {
     int data[6] = {1, 2, 3, 4, 5, 6};
     auto unique_data = std::make_unique<int[]>(6);
     std::memcpy(unique_data.get(), data, sizeof(int) * 6);
-    I_Matrix<int> non_square(3, 2, unique_data);
+    I_Matrix<int> non_square(3, 2, std::move(unique_data));
 
     int expected_data[6] = {1, 3, 5, 2, 4, 6};
     auto unique_expected_data = std::make_unique<int[]>(6);
     std::memcpy(unique_expected_data.get(), expected_data, sizeof(int) * 6);
-    I_Matrix<int> expected(2, 3, unique_expected_data);
+    I_Matrix<int> expected(2, 3, std::move(unique_expected_data));
 
     ASSERT_EQ(non_square.transpose(), expected);
 }
