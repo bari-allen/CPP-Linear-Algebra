@@ -8,7 +8,7 @@
 #include <bit>
 #include <limits>
 #include "vector_exception.h"
-#include <imageMat.h>
+#include "imageMat.h"
 
 template <class T>
 class I_Vector {
@@ -21,9 +21,9 @@ class I_Vector {
 
         I_Vector<T> operator+(const I_Vector<T>& rhs) const;
         I_Vector<T> operator-(const I_Vector<T>& rhs) const;
-        I_Vector<T> operator*(const T& rhs) const;
+        I_Vector<T> operator*(const T& rhs) const noexcept;
 
-        template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs);
+        template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs) noexcept;
         template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs);
 
         static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
@@ -92,6 +92,23 @@ I_Vector<T> I_Vector<T>::operator-(const I_Vector<T>& rhs) const {
 
     I_Vector<T> new_vector(m_dims, std::move(new_data));
     return new_vector;
+}
+
+template <class T>
+I_Vector<T> I_Vector<T>::operator*(const T& rhs) const noexcept{
+    auto new_data = std::make_unique<T[]>(m_dims);
+
+    for (uint32_t i = 0; i < m_dims; ++i) {
+        new_data[i] = m_data[i] * rhs;
+    }
+
+    I_Vector<T> new_vector(m_dims, std::move(new_data));
+    return new_vector;
+}
+
+template <class T>
+I_Vector<T> operator*(const T& lhs, const I_Vector<T>& rhs) noexcept {
+    return rhs * lhs;
 }
 
 template <class T>

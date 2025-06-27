@@ -111,3 +111,18 @@ TEST(TRANSPOSE, 3D) {
     bool test = transpose == mat;
     ASSERT_EQ(transpose, mat);
 }
+
+TEST(MULT, 3x) {
+    uint32_t data[3] = {1, 5, 20};
+    auto vec_data = std::make_unique<uint32_t[]>(3);
+    std::memcpy(vec_data.get(), data, 3 * sizeof(uint32_t));
+    I_Vector<uint32_t> lhs(3, std::move(vec_data));
+
+    uint32_t expected_data[3] = {3, 15, 60};
+    auto unique_expected_data = std::make_unique<uint32_t[]>(3);
+    std::memcpy(unique_expected_data.get(), expected_data, 3* sizeof(uint32_t));
+    I_Vector<uint32_t> expected(3, std::move(unique_expected_data));
+
+    auto result = lhs * 3;
+    ASSERT_EQ(result, expected);
+}
