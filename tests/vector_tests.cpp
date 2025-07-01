@@ -7,6 +7,8 @@
 #include <memory>
 #include <sys/types.h>
 
+using fast_math::fast_sqrt;
+
 constexpr float THRESHOLD = 0.000001;
 
 TEST(SQRT, 2) {
@@ -125,4 +127,116 @@ TEST(MULT, 3x) {
 
     auto result = lhs * 3;
     ASSERT_EQ(result, expected);
+}
+
+TEST(INNER_PRODUCT, 3_DIM) {
+    uint32_t lhs_data[3] = {10, 21, 4};
+    uint32_t rhs_data[3] = {1, 2, 3};
+    uint32_t expected = 64;
+
+    auto unique_lhs_data = std::make_unique<uint32_t[]>(3);
+    auto unique_rhs_data = std::make_unique<uint32_t[]>(3);
+
+    std::memcpy(unique_lhs_data.get(), lhs_data, 3 * sizeof(uint32_t));
+    std::memcpy(unique_rhs_data.get(), rhs_data, 3 * sizeof(uint32_t));
+
+    I_Vector<uint32_t> lhs(3, std::move(unique_lhs_data));
+    I_Vector<uint32_t> rhs(3, std::move(unique_rhs_data));
+
+    uint32_t actual = I_Vector<uint32_t>::dot(lhs, rhs);
+
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(INNER_PRODUCT, 0_DIM) {
+    I_Vector<uint32_t> lhs{};
+    I_Vector<uint32_t> rhs{};
+
+    uint32_t expected = 0;
+    uint32_t actual = I_Vector<uint32_t>::dot(lhs, rhs);
+
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(INNER_PRODUCT, EXCEPTION) {
+    I_Vector<uint32_t> lhs{};
+    I_Vector<uint32_t> rhs(4);
+
+    ASSERT_THROW(I_Vector<uint32_t>::dot(lhs, rhs), vector_exception);
+}
+
+TEST(OUTER_PRODUCT, 3_DIM) {
+    uint32_t lhs_data[3] = {10, 21, 4};
+    uint32_t rhs_data[3] = {1, 2, 3};
+    uint32_t expected_data[9] = {10, 20, 30, 
+                                21, 42, 63, 
+                                4, 8, 12};
+    
+    auto unique_lhs = std::make_unique<uint32_t[]>(3);
+    auto unique_rhs = std::make_unique<uint32_t[]>(3);
+    auto unique_expected = std::make_unique<uint32_t[]>(9);
+
+    std::memcpy(unique_lhs.get(), lhs_data, 3 * sizeof(uint32_t));
+    std::memcpy(unique_rhs.get(), rhs_data, 3 * sizeof(uint32_t));
+    std::memcpy(unique_expected.get(), expected_data, 9 * sizeof(uint32_t));
+
+    I_Vector<uint32_t> lhs(3, std::move(unique_lhs));
+    I_Matrix<uint32_t> rhs(1, 3, std::move(unique_rhs));
+    I_Matrix<uint32_t> expected(3, 3, std::move(unique_expected));
+
+    auto actual = I_Vector<uint32_t>::dot(lhs, rhs);
+
+    ASSERT_EQ(expected, actual);
+}
+
+TEST(NORM, 3_DIM) {
+    uint32_t data[3] = {10, 21, 4};
+    auto unique_data = std::make_unique<uint32_t[]>(3);
+    std::memcpy(unique_data.get(), data, 3 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(3, std::move(unique_data));
+
+    double expected = 23.600847;
+    double actual = I_Vector<uint32_t>::norm(vec);
+
+    ASSERT_TRUE(std::abs(actual - expected) < 0.0001);
+}
+
+TEST(NORM, 4_DIM) {
+    uint32_t data[4] = {10, 21, 4, 40};
+    auto unique_data = std::make_unique<uint32_t[]>(4);
+    std::memcpy(unique_data.get(), data, 4 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(4, std::move(unique_data));
+
+    double expected = 46.443514;
+    double actual = I_Vector<uint32_t>::norm(vec);
+
+    ASSERT_TRUE(std::abs(actual - expected) < 0.0001);
+}
+
+TEST(DOUBLE_ABS, NEGATIVE) {
+    double expected = 0.5;
+    double actual = fast_math::abs(-0.5);
+
+    ASSERT_TRUE(std::abs(expected - actual) < 0.001);
+}
+
+TEST(DOUBLE_ABS, POSITIVE) {
+    double expected = 0.9999;
+    double actual = fast_math::abs(0.9999);
+
+    ASSERT_TRUE(std::abs(expected - actual) < 0.001);
+}
+
+TEST(INT_ABS, NEGATIVE) {
+    uint32_t expected = 10000;
+    uint32_t actual = fast_math::abs(-10000);
+
+    ASSERT_TRUE(expected == actual);
+}
+
+TEST(INT_ABS, POSITIVE) {
+    uint32_t expected = 646;
+    uint32_t actual = fast_math::abs(646);
+
+    ASSERT_EQ(expected, actual);
 }

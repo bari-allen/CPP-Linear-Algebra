@@ -5,10 +5,10 @@
 #include <memory>
 #include <stdexcept>
 #include <cstdint>
-#include <bit>
-#include <limits>
+#include <type_traits>
 #include "vector_exception.h"
 #include "imageMat.h"
+#include "../src/fast_math.cpp"
 
 template <class T>
 class I_Vector {
@@ -24,11 +24,12 @@ class I_Vector {
         I_Vector<T> operator*(const T& rhs) const noexcept;
 
         template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs) noexcept;
-        template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs);
+        template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs) noexcept;
 
         static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
         static I_Matrix<T> dot(const I_Vector<T>& lhs, const I_Matrix<T>& rhs);
         static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
+        static double norm(const I_Vector<T>& vec);
         
         I_Matrix<T> transpose(void);
 
@@ -61,6 +62,8 @@ T I_Vector<T>::get_element(const uint32_t index) const{
 
     return m_data[index];
 }
+
+
 
 template <class T>
 I_Vector<T> I_Vector<T>::operator+(const I_Vector<T>& rhs) const{
@@ -112,7 +115,7 @@ I_Vector<T> operator*(const T& lhs, const I_Vector<T>& rhs) noexcept {
 }
 
 template <class T>
-bool operator==(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
+bool operator==(const I_Vector<T>& lhs, const I_Vector<T>& rhs) noexcept {
     if (lhs.get_dims() != rhs.get_dims()) {return false; }
 
     for (size_t i = 0; i < lhs.get_dims(); ++i) {
@@ -123,71 +126,75 @@ bool operator==(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
 }
 
 template <class T>
+T I_Vector<T>::dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
+    if (lhs.get_dims() != rhs.get_dims()) {
+        throw vector_exception("Size mismatch!");
+    }
+
+    T sum{};
+
+    for (uint32_t i = 0; i < lhs.get_dims(); ++i) {
+        sum += lhs.get_element(i) * rhs.get_element(i);
+    }
+
+    return sum;
+}
+
+template <class T>
+I_Matrix<T> I_Vector<T>::dot(const I_Vector<T>& lhs, const I_Matrix<T>& rhs) {
+    if (rhs.rows() != 1) {
+        throw vector_exception("Inputted matrix must be a row vector!");
+    }
+
+    auto output_data = std::make_unique<T[]>(lhs.get_dims() * rhs.cols());
+
+    for (uint32_t i = 0; i < lhs.get_dims(); ++i) {
+        for (uint32_t j = 0; j < rhs.cols(); ++j) {
+            uint32_t index = j + (i * rhs.cols());
+            output_data[index] = lhs.get_element(i) * rhs.get_element(0, j);
+        }
+    }
+
+    I_Matrix<T> outer_product(lhs.get_dims(), rhs.cols(), std::move(output_data));
+    return outer_product;
+}
+
+template <class T>
+I_Vector<T> I_Vector<T>::cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
+    if (lhs.get_dims() != 3 || rhs.get_dims() != 3) {
+        throw vector_exception("Cross product is only defined for 3-dimensional vectors!");
+    }
+
+    auto cross_data = std::make_unique<T[]>(3);
+
+    cross_data[0] = lhs.get_element(1) * rhs.get_element(2) - lhs.get_element(2) * rhs.get_element(1);
+    cross_data[1] = lhs.get_element(2) * rhs.get_element(0) - lhs.get_element(0) * rhs.get_element(2);
+    cross_data[2] = lhs.get_element(0) * rhs.get_element(1) - lhs.get_element(1) * rhs.get_element(0);
+
+    I_Vector<T> cross(3, std::move(cross_data));
+    return cross;
+}
+
+template <class T>
+double I_Vector<T>::norm(const I_Vector<T>& vec) {
+    static_assert(std::is_arithmetic<T>::value, "Type must be a number!");
+    double square_sum{};
+
+    for (uint32_t i = 0; i < vec.get_dims(); ++i) {
+        double val = static_cast<double>(vec.get_element(i));
+        square_sum += val * val;
+    }
+
+    return fast_math::fast_sqrt(square_sum);
+}
+
+template <class T>
 I_Matrix<T> I_Vector<T>::transpose(void) {
     auto trans_data = std::make_unique<T[]>(m_dims);
     std::copy(m_data.get(), m_data.get() + m_dims, trans_data.get());
 
     I_Matrix<T> transpose(1, m_dims, std::move(trans_data));
     return transpose;
-}
-
-
-
-inline double fast_sqrt(const double number) {
-    static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 must be used!");
-
-    if (number < 0) {return std::numeric_limits<double>::quiet_NaN();}
-
-    constexpr double smallest_normal = std::numeric_limits<double>::min();
-    if (number < smallest_normal) { return 0;}
-
-
-    double d_number = number;
-    double half = d_number * 0.5;
-    //magic = 3/2 * 2^52 * (1023 - 0.043)
-    constexpr uint64_t magic = 0x5FE339A0219FF02D;
-    constexpr double three_halves = 1.5;
-
-    //Evil bit hack
-    uint64_t reinterpret = std::bit_cast<uint64_t>(d_number);
-    reinterpret = magic - (reinterpret >> 1);
-    d_number = std::bit_cast<double>(reinterpret);
-
-    //Newton iterations to get a closer approximation
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-
-    //S * S ^ -1/2 = S ^ 1/2
-    return d_number * number;
-}
-
-inline double fast_sqrt(const int number) {
-    static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 must be used!");
-
-    if (number < 0) {return std::numeric_limits<double>::quiet_NaN();}
-
-
-    double d_number = static_cast<double>(number);
-    double half = d_number * 0.5;
-    //magic = 3/2 * 2^52 * (1023 - 0.043)
-    constexpr uint64_t magic = 0x5FE339A0219FF02D;
-    constexpr double three_halves = 1.5;
-
-    //Evil bit hack
-    uint64_t reinterpret = std::bit_cast<uint64_t>(d_number);
-    reinterpret = magic - (reinterpret >> 1);
-    d_number = std::bit_cast<double>(reinterpret);
-
-    //Newton iterations to get a closer approximation
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-    d_number = d_number * (three_halves - (half * d_number * d_number));
-
-    //S * S ^ -1/2 = S ^ 1/2
-    return d_number * static_cast<double>(number);
 }
 
 #endif

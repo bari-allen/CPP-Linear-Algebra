@@ -230,7 +230,7 @@ class I_Matrix {
          * @returns the linear index given the inputted row and column or -1 if the 
          *          row and/or column are out of bounds
          */
-        int linear_index(int row, int col);
+        int linear_index(int row, int col) const;
 
         /**
          * A recursive helper function that finds the determinant of a square matrix
@@ -701,7 +701,7 @@ I_Matrix<double> inv(const I_Matrix<T>& mat) {
 }
 
 template <class T>
-int I_Matrix<T>::linear_index(int row, int col) {
+int I_Matrix<T>::linear_index(int row, int col) const{
     if (row > m_rows || col > m_cols || row < 0 || col < 0) {
         return -1;
     }
