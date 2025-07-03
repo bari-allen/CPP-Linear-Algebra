@@ -1,4 +1,4 @@
-#include "../include/imageVec.h"
+#include "../include/imageMat.h"
 #include "../include/vector_exception.h"
 #include <cmath>
 #include <cstdint>

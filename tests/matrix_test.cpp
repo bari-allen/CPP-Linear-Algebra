@@ -1,7 +1,9 @@
 #include "../include/imageMat.h"
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <memory>
 #include <chrono>
+#include <sys/types.h>
 
 TEST(DOT_PRODUCT, SIMPLE) {
     int lhs_data[3] = {1, 2, 5};
@@ -377,3 +379,90 @@ TEST(TRANSPOSE, NON_SQUARE) {
 
     ASSERT_EQ(non_square.transpose(), expected);
 }
+
+TEST(GET_COLUMN, 3x3) {
+    uint32_t mat_data[9] = {1, 2, 10, 3, 4, 1, 5, 6, 0};
+    auto unique_matrix = std::make_unique<uint32_t[]>(9);
+    std::memcpy(unique_matrix.get(), mat_data, 9 * sizeof(uint32_t));
+    I_Matrix<uint32_t> mat(3, 3, std::move(unique_matrix));
+
+    uint32_t vec_data[3] = {1, 3, 5};
+    auto unique_vec = std::make_unique<uint32_t[]>(3);
+    std::memcpy(unique_vec.get(), vec_data, 3 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(3, std::move(unique_vec));
+
+    auto result = mat.get_column(0);
+
+    ASSERT_EQ(vec, result);
+}
+
+TEST(GET_ROW, 3x3) {
+    uint32_t mat_data[9] = {1, 2, 10, 3, 4, 1, 5, 6, 0};
+    auto unique_matrix = std::make_unique<uint32_t[]>(9);
+    std::memcpy(unique_matrix.get(), mat_data, 9 * sizeof(uint32_t));
+    I_Matrix<uint32_t> mat(3, 3, std::move(unique_matrix));
+
+    uint32_t vec_data[3] {5, 6, 0};
+    auto unique_vec = std::make_unique<uint32_t[]>(3);
+    std::memcpy(unique_vec.get(), vec_data, 3 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(3, std::move(unique_vec));
+
+    auto result = mat.get_row(2);
+
+    ASSERT_EQ(vec, result);
+}
+
+TEST(SET_COLUMN, 4x4) {
+    uint32_t mat_data[16] = {1, 7, 0, 5, 
+                            2, 10, 0, 72, 
+                            3, 42, 1, 95, 
+                            5, 1, 0, 11};
+    auto unique_matrix = std::make_unique<uint32_t[]>(16);
+    std::memcpy(unique_matrix.get(), mat_data, 16 * sizeof(uint32_t));
+    I_Matrix<uint32_t> mat(4, 4, std::move(unique_matrix));
+
+    uint32_t vec_data[4] = {71, 17, 82, 28};
+    auto unique_vec = std::make_unique<uint32_t[]>(4);
+    std::memcpy(unique_vec.get(), vec_data, 4 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(4, std::move(unique_vec));
+
+    uint32_t expected_data[16] = {1, 7, 71, 5, 
+                                2, 10, 17, 72, 
+                                3, 42, 82, 95, 
+                                5, 1, 28, 11};
+    auto uniue_expected = std::make_unique<uint32_t[]>(16);
+    std::memcpy(uniue_expected.get(), expected_data, 16 * sizeof(uint32_t));
+    I_Matrix<uint32_t> expected(4, 4, std::move(uniue_expected));
+
+    mat.set_col(2, vec);
+
+    ASSERT_EQ(mat, expected);
+}
+
+TEST(SET_ROW, 4x4) {
+    uint32_t mat_data[16] = {1, 7, 0, 5, 
+                            2, 10, 0, 72, 
+                            3, 42, 1, 95, 
+                            5, 1, 0, 11};
+    auto unique_matrix = std::make_unique<uint32_t[]>(16);
+    std::memcpy(unique_matrix.get(), mat_data, 16 * sizeof(uint32_t));
+    I_Matrix<uint32_t> mat(4, 4, std::move(unique_matrix));
+
+    uint32_t vec_data[4] = {71, 17, 82, 28};
+    auto unique_vec = std::make_unique<uint32_t[]>(4);
+    std::memcpy(unique_vec.get(), vec_data, 4 * sizeof(uint32_t));
+    I_Vector<uint32_t> vec(4, std::move(unique_vec));
+
+    uint32_t expected_data[16] = {1, 7, 0, 5, 
+                                2, 10, 0, 72, 
+                                3, 42, 1, 95, 
+                                71, 17, 82, 28};
+    auto unique_expected = std::make_unique<uint32_t[]>(16);
+    std::memcpy(unique_expected.get(), expected_data, 16 * sizeof(uint32_t));
+    I_Matrix<uint32_t> expected(4, 4, std::move(unique_expected));
+
+    mat.set_row(3, vec);
+
+    ASSERT_EQ(mat, expected);
+}
+
