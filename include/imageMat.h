@@ -9,6 +9,7 @@
 #include <vector>
 #include "../src/vector_exception.cpp"
 #include "../src/fast_math.cpp"
+#include <tuple>
 
 template <class T>
 class I_Vector;
@@ -33,6 +34,10 @@ class I_Matrix {
         I_Matrix(int n_rows, int n_cols, std::unique_ptr<T[]> input_data);
         /**The copy constructor */
         I_Matrix(const I_Matrix<T>& input_matrix);
+        /**Constructor to cast the data from a matrix to type T and copy it */
+        template <class U> I_Matrix(const I_Matrix<U>& input_matrix);
+        /**Move copying */
+        I_Matrix<T>& operator=(I_Matrix<T>&& other) noexcept = default;
 
         /**
          * Resizes the matrix to the given number of rows and columns and initializes
@@ -73,8 +78,22 @@ class I_Matrix {
          */
         bool set_element(int row, int col, T element);
 
+        /**
+         * Sets the column at the given column number to the inputted vector
+         * 
+         * @param col the column number to change
+         * @param col_data the vector whos data will be set at the given column
+         * @throws  throws invalid_argument if the given column is out of bounds
+         */
         void set_col(const uint32_t col, const I_Vector<T>& col_data); 
 
+        /**
+         * Sets the row at the given row number to the inputted vector
+         * 
+         * @param row the row number to change
+         * @param row_data the vector whos data will be set at the given row
+         * @throws  throws invalid_argument if the given row is out of bounds
+         */
         void set_row(const uint32_t row, const I_Vector<T>& row_data);
 
         /**
@@ -98,8 +117,28 @@ class I_Matrix {
          */
         std::unique_ptr<T[]> get_elements() const;
 
+        /**
+         * Returns a vector of the elements in the inputted column
+         * 
+         * Throws an error if the inputted column is out of bounds
+         * 
+         * @param col the column of the desired element
+         * @returns a vector of the column data
+         * @throws invalid_argument is thrown if the inputted column is
+         *         out of bounds for the matrix
+         */
         I_Vector<T> get_column(const uint32_t col) const;
 
+        /**
+         * Returns a vector of the elements in the inputted row
+         * 
+         * Throws an error if the inputted row is out of bounds
+         * 
+         * @param row the row of the desired element
+         * @returns a vector of the column data
+         * @throws invalid_argument is thrown if the inputted row is
+         *         out of bounds for the matrix
+         */
         I_Vector<T> get_row(const uint32_t row) const;
 
         /**
@@ -228,10 +267,34 @@ class I_Matrix {
         template <class U> friend I_Matrix<double> inv(const I_Matrix<U>& mat);
 
         /**
+         * Returns a square, identity matrix with the given size 
+         * 
+         * @param size the number of rows and columns in the matrix
+         * @returns a square, identity matrix*/
+        static I_Matrix<T> eye(const uint32_t size);
+
+        /**
          * Returns the transpose of the given matrix
          * @returns the transpose of the given matrix
          */
         I_Matrix<T> transpose(void) const;
+
+        /**
+         * Performs QR factorization on the given matrix given that the matrix is square
+         * 
+         * This function will throw an exception if the inputted matrix is not square
+         * 
+         * This function performs QR factorization using Givens Rotations due to its
+         * numberical stability and speed
+         *  
+         * Algorithm used is adapted from this video:
+         * https://youtu.be/kyG8YMIfNA0
+         * 
+         * @param  A the matrix to be factored
+         * @returns a tuple containing both the Q and R matrices
+         * @throws throws logic_error if the inputted matrix is non-square
+         */
+        static std::tuple<I_Matrix<double>, I_Matrix<double>> QR(const I_Matrix<T>& A);
 
     //Private functions
     private:
@@ -294,11 +357,61 @@ class I_Matrix {
          * @throws throws logic_error if the matrix is singular or near-singular
          */
         static I_Matrix<double> inv_helper(const int size, const std::unique_ptr<T[]>& data);
+        
+        /**
+         * Returns the sine and cosine of the given sides of the triangle
+         * 
+         * @param a the opposite side of the given angle
+         * @param b the adjacent side of the given angle
+         * @returns the sine and cosine from the given sides */
+        static std::unique_ptr<double[]> get_angles(const T& a, const  T& b);
 
     //Private variables
     private:
         std::unique_ptr<T[]> matrix_data;
         int m_rows, m_cols, m_elements;
+};
+
+
+template <class T>
+class I_Vector {
+    public:
+        /** The constructor with default values of 0 and nullptr */
+        I_Vector(const uint32_t dimensions = 0, std::unique_ptr<T[]> input_data = nullptr) noexcept;
+
+        /**
+         * Returns the number of elements in the vector
+         * 
+         * @returns the number of elements in the vector*/
+        size_t get_dims(void) const noexcept;
+
+        /**
+         * Returns the element at the given index
+         * 
+         * Throws an exception if the index is out of bounds
+         * 
+         * @param index the desired element's index
+         * @throws throws invalid_argument if the given index is out of bounds*/
+        T get_element(const uint32_t index) const;
+
+        I_Vector<T> operator+(const I_Vector<T>& rhs) const;
+        I_Vector<T> operator-(const I_Vector<T>& rhs) const;
+        I_Vector<T> operator*(const T& rhs) const noexcept;
+
+        template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs) noexcept;
+        template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs) noexcept;
+
+        static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
+        static I_Matrix<T> dot(const I_Vector<T>& lhs, const I_Matrix<T>& rhs);
+        static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
+        static double norm(const I_Vector<T>& vec);
+        
+        I_Matrix<T> transpose(void);
+
+    
+    private:
+        std::unique_ptr<T[]> m_data;
+        int m_dims;
 };
 
 template <class T>
@@ -330,7 +443,26 @@ I_Matrix<T>::I_Matrix(const I_Matrix<T>& input_matrix) {
     m_rows = input_matrix.rows();
     m_cols = input_matrix.cols();
     m_elements = m_rows * m_cols;
-    std::copy(input_matrix.get_elements().get(), input_matrix.get_elements().get() + m_elements, matrix_data.get());
+    matrix_data = std::make_unique<T[]>(m_elements);
+
+    for (uint32_t i = 0; i < m_elements; ++i) {
+        matrix_data[i] = static_cast<T>(input_matrix.get_elements()[i]);
+    }
+}
+
+template <class T>
+template <class U>
+I_Matrix<T>::I_Matrix(const I_Matrix<U>& input_matrix) {
+    static_assert(std::is_convertible<U, T>::value, "Types must be convertible!");
+
+    m_rows = input_matrix.rows();
+    m_cols = input_matrix.cols();
+    m_elements = m_rows * m_cols;
+    matrix_data = std::make_unique<T[]>(m_elements);
+
+    for (uint32_t i = 0; i < m_elements; ++i) {
+        matrix_data[i] = static_cast<T>(input_matrix.get_elements()[i]);
+    }
 }
 
 template <class T> 
@@ -460,7 +592,7 @@ bool I_Matrix<T>::operator==(const I_Matrix<T>& rhs) const {
 
         double difference = static_cast<double>(matrix_data[i] - rhs_data[i]);
         
-        if (fast_math::abs(difference) > 0.0000000001) {
+        if (std::is_floating_point<T>::value && fast_math::abs(difference) > 0.0000001) {
             return false;
         }
     }
@@ -779,6 +911,73 @@ I_Matrix<double> inv(const I_Matrix<T>& mat) {
 }
 
 template <class T>
+I_Matrix<T> I_Matrix<T>::eye(const uint32_t size) {
+    auto identity_data = std::make_unique<T[]>(size * size);
+
+    for (uint32_t i = 0; i < size; ++i) {
+        uint32_t index = i + (i * size);
+        identity_data[index] = 1;
+    }
+
+    I_Matrix<T> identity_mat(size, size, std::move(identity_data));
+    return identity_mat;
+}
+
+template <class T>
+std::unique_ptr<double[]> I_Matrix<T>::get_angles(const T& a, const T& b) {
+    static_assert(std::is_arithmetic<T>::value, "Type must be a number");
+
+    double d_a = static_cast<double>(a);
+    double d_b = static_cast<double>(b);
+
+    double hyp = fast_math::fast_sqrt((d_a * d_a) + (d_b * d_b));
+    double cos = d_a / hyp;
+    double sin = -d_b / hyp;
+
+    auto angles = std::make_unique<double[]>(2);
+    angles[0] = cos;
+    angles[1] = sin;
+
+    return angles;
+}
+
+template <class T>
+std::tuple<I_Matrix<double>, I_Matrix<double>> I_Matrix<T>::QR(const I_Matrix<T>& A) {
+    if (A.cols() != A.rows()) {
+        throw std::logic_error("Cannot return a QR matrix of a non-square matrix");
+    }
+
+    uint32_t shape = A.cols();
+    I_Matrix<double> R(A);
+    I_Matrix<double> Q = I_Matrix<T>::eye(shape);
+    std::tuple<I_Matrix<double>, I_Matrix<double>> return_tup;
+
+    for (uint32_t i = 0; i < shape - 1; ++i) {
+        for (uint32_t j = i + 1; j < shape; ++j) {
+            auto angles = get_angles(R.get_element(i, i), R.get_element(j, i));
+            double cos = angles[0];
+            double sin = angles[1];
+
+            I_Vector<double> ith_row = R.get_row(i);
+            I_Vector<double> jth_row = R.get_row(j);
+
+            R.set_row(i, (cos * ith_row) + ((-sin) * jth_row));
+            R.set_row(j, (sin * ith_row) + (cos * jth_row));
+
+            I_Vector<double> ith_col = Q.get_column(i);
+            I_Vector<double> jth_col = Q.get_column(j);
+
+            Q.set_col(i, (cos * ith_col) + ((-sin) * jth_col));
+            Q.set_col(j, (sin * ith_col) + (cos * jth_col));    
+        }
+    }
+
+    return_tup = std::make_tuple(std::move(Q), std::move(R));
+
+    return return_tup;
+}
+
+template <class T>
 int I_Matrix<T>::linear_index(int row, int col) const{
     if (row > m_rows || col > m_cols || row < 0 || col < 0) {
         return -1;
@@ -786,35 +985,6 @@ int I_Matrix<T>::linear_index(int row, int col) const{
 
     return col + (row * m_cols);
 }
-
-template <class T>
-class I_Vector {
-    public:
-        I_Vector(const uint32_t dimensions = 0, std::unique_ptr<T[]> input_data = nullptr) noexcept;
-
-        size_t get_dims(void) const noexcept;
-
-        T get_element(const uint32_t index) const;
-
-        I_Vector<T> operator+(const I_Vector<T>& rhs) const;
-        I_Vector<T> operator-(const I_Vector<T>& rhs) const;
-        I_Vector<T> operator*(const T& rhs) const noexcept;
-
-        template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs) noexcept;
-        template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs) noexcept;
-
-        static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
-        static I_Matrix<T> dot(const I_Vector<T>& lhs, const I_Matrix<T>& rhs);
-        static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
-        static double norm(const I_Vector<T>& vec);
-        
-        I_Matrix<T> transpose(void);
-
-    
-    private:
-        std::unique_ptr<T[]> m_data;
-        int m_dims;
-};
 
 template <class T>
 I_Vector<T>::I_Vector(const uint32_t dimensions, std::unique_ptr<T[]> input_data) noexcept
