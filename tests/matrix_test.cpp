@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <chrono>
+#include <stdexcept>
 #include <sys/types.h>
 
 TEST(DOT_PRODUCT, SIMPLE) {
@@ -566,4 +567,49 @@ TEST(QR_TEST, 14x14) {
     auto actual_A = std::get<0>(QR) * std::get<1>(QR);
 
     ASSERT_EQ(actual_A, A);
+}
+
+TEST(EIG, 3x3) {
+    double a_data[9] = {41, 12, 87, 62, 63, 98, 72, 21, 61};
+    auto unique_a_data = std::make_unique<double[]>(9);
+    std::memcpy(unique_a_data.get(), a_data, 9 * sizeof(double));
+    I_Matrix<double> A(3, 3, std::move(unique_a_data));
+
+    double expected_data[3] = {159.21038910441368, 35.59260509899343, -29.802994203407092};
+    auto unique_expected_data = std::make_unique<double[]>(3);
+    std::memcpy(unique_expected_data.get(), expected_data, 3 * sizeof(double));
+    I_Vector<double> expected(3, std::move(unique_expected_data));
+
+    I_Vector<double> actual = I_Matrix<double>::eig(A);
+    ASSERT_TRUE(fast_math::abs(actual.get_element(2) - expected.get_element(2)) < 0.000001);
+}
+
+TEST(EIG, ANOTHER_3x3) {
+    double a_data[9] = {0, 1, 1, 1, 0, 1, 1, 1, 0};
+    auto unique_a_data = std::make_unique<double[]>(9);
+    std::memcpy(unique_a_data.get(), a_data, 9 * sizeof(double));
+    I_Matrix<double> A(3, 3, std::move(unique_a_data));
+
+    double expected_last = -1;
+
+    I_Vector<double> actual = I_Matrix<double>::eig(A);
+    ASSERT_TRUE(fast_math::abs(actual.get_element(2) - expected_last) < 0.000001);
+}
+
+TEST(EIG, YET_ANOTHER_3x3) {
+    double a_data[9] = {-1, 18, 0, 1, 2, 0, 5, -3, -1};
+    auto unique_a_data = std::make_unique<double[]>(9);
+    std::memcpy(unique_a_data.get(), a_data, 9 * sizeof(double));
+    I_Matrix<double> A(3, 3, std::move(unique_a_data));
+
+    double expected_last = -1;
+
+    I_Vector<double> actual = I_Matrix<double>::eig(A);
+    ASSERT_TRUE(fast_math::abs(actual.get_element(2) - expected_last) < 0.000001);
+}
+
+TEST(EIG, EXCEPTION) {
+    I_Matrix<double> exception(4, 3);
+
+    ASSERT_THROW(I_Matrix<double>::eig(exception), std::invalid_argument);
 }

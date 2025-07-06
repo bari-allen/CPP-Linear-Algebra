@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <thread>
 #include <vector>
-#include "../src/vector_exception.cpp"
+#include "vector_exception.h"
 #include "../src/fast_math.cpp"
 #include <tuple>
 
@@ -16,9 +16,12 @@ class I_Vector;
 
 /**
  * A matrix class that will include functions to perform simple linear algebra operations
- * The purpose of this class is to allow for PCA transformations of images
  * @author Karl Haidinyak, bari-allen (GitHub)
  */
+
+/*******************************************************************************
+*I_Matrix class definitions
+*******************************************************************************/
 template <class T>
 class I_Matrix {
     //Public Functions
@@ -296,6 +299,23 @@ class I_Matrix {
          */
         static std::tuple<I_Matrix<double>, I_Matrix<double>> QR(const I_Matrix<T>& A);
 
+        /**
+         * @brief Computes the eigenvalues of the given matrix
+         * 
+         * This function computes the eigenvalues using the QR algorithm with 
+         * Wilkison-style shifts where the last element on the diagonal is used
+         * for the shift matrix
+         * 
+         * A link to the Wikipedia page for the QR algorithm:
+         * https://en.wikipedia.org/wiki/QR_algorithm
+         * 
+         * @param A the input matrix
+         * @param tolerance the percision of the last eigenvalue in the matrix
+         * @return the eigenvalues of the matrix
+         * @throws throws invalid_argument exception if the A matrix is non-square
+         */
+        static I_Vector<double> eig(const I_Matrix<T>& A, const double tolerance = 1e-32);
+
     //Private functions
     private:
         /**
@@ -365,6 +385,17 @@ class I_Matrix {
          * @param b the adjacent side of the given angle
          * @returns the sine and cosine from the given sides */
         static std::unique_ptr<double[]> get_angles(const T& a, const  T& b);
+        
+        /**
+         * @brief Computes the RQ matrix of the given matrix
+         * 
+         * If A = QR then  this function computes RQ which should the converge
+         * to a matrix with the eigenvalues along the diagonal
+         * 
+         * @param A The input matrix
+         * @return The RQ matrix of the given matrix
+         */
+        static I_Matrix<double> make_similar(const I_Matrix<T>& A); 
 
     //Private variables
     private:
@@ -372,6 +403,9 @@ class I_Matrix {
         int m_rows, m_cols, m_elements;
 };
 
+/*******************************************************************************
+*I_Vector class definitions
+*******************************************************************************/
 
 template <class T>
 class I_Vector {
@@ -394,25 +428,117 @@ class I_Vector {
          * @throws throws invalid_argument if the given index is out of bounds*/
         T get_element(const uint32_t index) const;
 
+        /**
+         * @brief Adds the vector element-wise
+         * 
+         * @param rhs the right-hand vector
+         * @return the element-wise addition of this and the rhs vector
+         * @throws throws vector-exception if the two vectors have different dimensions
+         */
         I_Vector<T> operator+(const I_Vector<T>& rhs) const;
+
+        /**
+         * @brief Subtracts the vector element-wise
+         * 
+         * @param rhs the right-hand vector
+         * @return the element-wise subtraction of this and the rhs vector
+         * @throws throws vector-exception if the two vectors have different dimensions
+         */
         I_Vector<T> operator-(const I_Vector<T>& rhs) const;
+
+        /**
+         * @brief Multiplies this vector with a scaler
+         * 
+         * @param rhs the right-hand scaler 
+         * @return this vector multiplied by the scaler rhs value
+         */
         I_Vector<T> operator*(const T& rhs) const noexcept;
 
+        /**
+         * @brief Multiplies the rhs vector by the lhs scaler
+         * 
+         * @tparam U 
+         * @param lhs the scaler value
+         * @param rhs the vector
+         * @return the rhs vector multiplied by the scaler lhs value
+         */
         template <class U> friend I_Vector<U> operator*(const U& lhs, const I_Vector<U>& rhs) noexcept;
+
+        /**
+         * @brief Checks whether the two matrices are equal
+         *
+         * Checks for equality by checking for equality element-wise or checks if the absolute value
+         * difference is less than a tolerance if the U parameter is a floating point
+         * 
+         * @tparam U 
+         * @param lhs the left-hand side vector
+         * @param rhs the right-hand side vector
+         * @return true if the two vectors are equal
+         * @return false if the two vectors aren't equal
+         */
         template <class U> friend bool operator==(const I_Vector<U>& lhs, const I_Vector<U>& rhs) noexcept;
 
+        /**
+         * @brief Computes the inner-product of the two matrices
+         * 
+         * @param lhs the left-hand side vector
+         * @param rhs the right-hand side vector
+         * @return the inner-product of the vectors
+         * @throws throws vector_exception if the two vectors have different dimensions
+         */
         static T dot(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
+
+        /**
+         * @brief Computes the outer-product of the two matrices
+         * 
+         * The rhs is a matrix instead of a vector since it is a row-vector instead
+         * of a column vector
+         * 
+         * @param lhs the left-hand side column vector
+         * @param rhs the right-hand side row vector
+         * @return the outer-product of the two vectors
+         * @throws throws vector_exception if the two vectors have different dimensions
+         */
         static I_Matrix<T> dot(const I_Vector<T>& lhs, const I_Matrix<T>& rhs);
+
+        /**
+         * @brief Computes the cross product of the two vectors
+         * 
+         * @param lhs the left-hand side vector
+         * @param rhs the right-hand side vector
+         * @return the cross product of the two vectors
+         * @throws throws vector_exception if the lhs and rhs either have a dimension
+         *         mismatch or don't have a dimension of 3
+         */
         static I_Vector<T> cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs);
-        static double norm(const I_Vector<T>& vec);
+
+        /**
+         * @brief Computes the 2-norm of the given vector
+         * 
+         * @param vec the input vector
+         * @return the 2-norm of the input vector
+         */
+        static double norm(const I_Vector<T>& vec) noexcept;
         
-        I_Matrix<T> transpose(void);
+        /**
+         * @brief Computes the transpose of the given vector
+         * 
+         * Since the transpose of a column vector is a row vector an I_Matrix is
+         * returned 
+         * 
+         * @return the transpose of the given vector
+         */
+        I_Matrix<T> transpose(void) noexcept;
 
     
     private:
         std::unique_ptr<T[]> m_data;
         int m_dims;
 };
+
+/*******************************************************************************
+*I_Matrix function implementations
+*******************************************************************************/
 
 template <class T>
 I_Matrix<T>::I_Matrix() {
@@ -612,7 +738,7 @@ I_Matrix<T> operator+(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
         data[i] = lhs.matrix_data[i] + rhs.matrix_data[i];
     }
 
-    I_Matrix<T> matrix(lhs.rows(), lhs.cols(), data);
+    I_Matrix<T> matrix(lhs.rows(), lhs.cols(), std::move(data));
     return matrix;
 }
 
@@ -627,7 +753,7 @@ I_Matrix<T> operator+(const T& lhs, const I_Matrix<T>& rhs) {
         data[i] = lhs + rhs.matrix_data[i];
     }
 
-    I_Matrix<T> matrix(rows, cols, data);
+    I_Matrix<T> matrix(rows, cols, std::move(data));
     return matrix;
 }
 
@@ -643,14 +769,12 @@ I_Matrix<T> operator-(const I_Matrix<T>& lhs, const I_Matrix<T>& rhs) {
     }
 
     auto data = std::make_unique<T[]>(lhs.rows() * lhs.cols());
-    auto lhs_data = lhs.matrix_data;
-    auto rhs_data = rhs.matrix_data;
 
     for (int i = 0; i < lhs.rows() * lhs.cols(); ++i) {
-        data[i] = lhs_data[i] - rhs_data[i];
+        data[i] = lhs.matrix_data[i] - rhs.matrix_data[i];
     }
 
-    I_Matrix<T> matrix(lhs.rows(), lhs.cols(), data);
+    I_Matrix<T> matrix(lhs.rows(), lhs.cols(), std::move(data));
     return matrix;
 }
 
@@ -665,7 +789,7 @@ I_Matrix<T> operator-(const I_Matrix<T>& lhs, const T& rhs) {
         data[i] = lhs.matrix_data[i] - rhs;
     }
 
-    I_Matrix<T> matrix(rows, cols, data);
+    I_Matrix<T> matrix(rows, cols, std::move(data));
     return matrix;
 }
 
@@ -680,7 +804,7 @@ I_Matrix<T> operator-(const T& lhs, const I_Matrix<T>& rhs) {
         data[i] = lhs - rhs.matrix_data[i];
     }
 
-    I_Matrix<T> matrix(rows, cols, data);
+    I_Matrix<T> matrix(rows, cols, std::move(data));
     return matrix;
 }
 
@@ -746,7 +870,7 @@ I_Matrix<T> operator*(const I_Matrix<T>& lhs, const T& rhs) {
         data[i] = lhs.matrix_data[i] * rhs;
     }
 
-    I_Matrix<T> matrix(rows, cols, data);
+    I_Matrix<T> matrix(rows, cols, std::move(data));
     return matrix;
 }
 
@@ -978,6 +1102,51 @@ std::tuple<I_Matrix<double>, I_Matrix<double>> I_Matrix<T>::QR(const I_Matrix<T>
 }
 
 template <class T>
+I_Matrix<double> I_Matrix<T>::make_similar(const I_Matrix<T>& A) {
+    std::tuple<I_Matrix<double>, I_Matrix<double>> QR = I_Matrix<T>::QR(A);
+    I_Matrix<double> Q = std::get<0>(QR);
+    I_Matrix<double> R = std::get<1>(QR);
+
+    I_Matrix<double> B = R * Q;
+    return B;
+}
+
+template <class T>
+I_Vector<double> I_Matrix<T>::eig(const I_Matrix<T>& A, const double tolerance) {
+    static_assert(std::is_arithmetic<T>::value, "Type must be an arithmetic type");
+
+    if (A.rows() != A.cols()) {
+        throw std::invalid_argument("Cannot get the eigenvalues of a non-square matrix");
+    }
+
+    I_Matrix<double> B = make_similar(A);
+    uint32_t iters = 0;
+    double last_eig = B.get_element(B.rows() - 1, B.cols() - 1);
+    double diff = 1;
+    const uint32_t last_row = B.rows() - 1;
+    const uint32_t last_col = B.cols() - 1;
+
+    while (diff > tolerance && iters < 100) {
+        I_Matrix<double> shift = eye(B.rows()) * B.get_element(last_row, last_col);
+        I_Matrix<double> C = B - shift;
+        B = make_similar(C) + shift;
+        ++iters;
+        diff = fast_math::abs(last_eig - B.get_element(last_row, last_col));
+        last_eig = B.get_element(last_row, last_col);
+    }
+
+    auto eig_data = std::make_unique<double[]>(B.rows());
+
+    for (uint32_t i = 0; i < B.rows(); ++i) {
+        eig_data[i] = B.get_element(i, i);
+    }
+
+    I_Vector<double> eig(B.rows(), std::move(eig_data));
+    return eig;
+}
+
+
+template <class T>
 int I_Matrix<T>::linear_index(int row, int col) const{
     if (row > m_rows || col > m_cols || row < 0 || col < 0) {
         return -1;
@@ -985,6 +1154,10 @@ int I_Matrix<T>::linear_index(int row, int col) const{
 
     return col + (row * m_cols);
 }
+
+/*******************************************************************************
+*I_Vector function implementations
+*******************************************************************************/
 
 template <class T>
 I_Vector<T>::I_Vector(const uint32_t dimensions, std::unique_ptr<T[]> input_data) noexcept
@@ -1112,6 +1285,10 @@ I_Vector<T> I_Vector<T>::cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
         throw vector_exception("Cross product is only defined for 3-dimensional vectors!");
     }
 
+    if (lhs.get_dims() != rhs.get_dims()) {
+        throw vector_exception("Dimension mismatch");
+    }
+
     auto cross_data = std::make_unique<T[]>(3);
 
     cross_data[0] = lhs.get_element(1) * rhs.get_element(2) - lhs.get_element(2) * rhs.get_element(1);
@@ -1123,7 +1300,7 @@ I_Vector<T> I_Vector<T>::cross(const I_Vector<T>& lhs, const I_Vector<T>& rhs) {
 }
 
 template <class T>
-double I_Vector<T>::norm(const I_Vector<T>& vec) {
+double I_Vector<T>::norm(const I_Vector<T>& vec) noexcept{
     static_assert(std::is_arithmetic<T>::value, "Type must be a number!");
     double square_sum{};
 
@@ -1136,7 +1313,7 @@ double I_Vector<T>::norm(const I_Vector<T>& vec) {
 }
 
 template <class T>
-I_Matrix<T> I_Vector<T>::transpose(void) {
+I_Matrix<T> I_Vector<T>::transpose(void) noexcept{
     auto trans_data = std::make_unique<T[]>(m_dims);
     std::copy(m_data.get(), m_data.get() + m_dims, trans_data.get());
 
